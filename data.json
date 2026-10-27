@@ -1,0 +1,624 @@
+{
+  "updated": "2026-10-27",
+  "markets": {
+    "g": "グロース",
+    "s": "スタンダード",
+    "n": "名証ネクスト"
+  },
+  "past": [
+    {
+      "name": "TOブックス",
+      "code": "500A",
+      "group": "s",
+      "date": "2026-02-13",
+      "price": 3910,
+      "open": 3595,
+      "lead": "SMBC日興証券"
+    },
+    {
+      "name": "イノバセル",
+      "code": "504A",
+      "group": "g",
+      "date": "2026-02-24",
+      "price": 1350,
+      "open": 1248,
+      "lead": "野村證券"
+    },
+    {
+      "name": "ギークリー",
+      "code": "505A",
+      "group": "s",
+      "date": "2026-02-27",
+      "price": 1900,
+      "open": 1757,
+      "lead": "野村證券"
+    },
+    {
+      "name": "ジェイファーマ",
+      "code": "520A",
+      "group": "g",
+      "date": "2026-03-25",
+      "price": 880,
+      "open": 809,
+      "lead": "SBI証券"
+    },
+    {
+      "name": "ベーシック",
+      "code": "519A",
+      "group": "g",
+      "date": "2026-03-25",
+      "price": 870,
+      "open": 800,
+      "lead": "岡三証券"
+    },
+    {
+      "name": "セイワホールディングス",
+      "code": "523A",
+      "group": "g",
+      "date": "2026-03-27",
+      "price": 1250,
+      "open": 1220,
+      "lead": "SBI証券"
+    },
+    {
+      "name": "ビタブリッドジャパン",
+      "code": "542A",
+      "group": "g",
+      "date": "2026-04-02",
+      "price": 1370,
+      "open": 1301,
+      "lead": "SBI証券"
+    },
+    {
+      "name": "システムエグゼ",
+      "code": "548A",
+      "group": "s",
+      "date": "2026-04-06",
+      "price": 950,
+      "open": 1061,
+      "lead": "みずほ証券"
+    },
+    {
+      "name": "ヒトトヒトホールディングス",
+      "code": "549A",
+      "group": "s",
+      "date": "2026-04-07",
+      "price": 430,
+      "open": 422,
+      "lead": "野村證券"
+    },
+    {
+      "name": "ソフトテックス",
+      "code": "550A",
+      "group": "s",
+      "date": "2026-04-09",
+      "price": 1940,
+      "open": 3200,
+      "lead": "岡三証券"
+    },
+    {
+      "name": "バトンズ",
+      "code": "554A",
+      "group": "g",
+      "date": "2026-04-21",
+      "price": 660,
+      "open": 1674,
+      "lead": "大和証券"
+    },
+    {
+      "name": "SQUEEZE",
+      "code": "558A",
+      "group": "g",
+      "date": "2026-04-22",
+      "price": 3110,
+      "open": 3250,
+      "lead": "SBI証券"
+    },
+    {
+      "name": "犬猫生活",
+      "code": "556A",
+      "group": "g",
+      "date": "2026-04-23",
+      "price": 2990,
+      "open": 3500,
+      "lead": "SBI証券"
+    },
+    {
+      "name": "梅乃宿酒造",
+      "code": "559A",
+      "group": "s",
+      "date": "2026-04-24",
+      "price": 600,
+      "open": 900,
+      "lead": "SMBC日興証券"
+    },
+    {
+      "name": "GO",
+      "code": "581A",
+      "group": "g",
+      "date": "2026-06-16",
+      "price": 2400,
+      "open": 2910,
+      "lead": "野村證券"
+    },
+    {
+      "name": "LiNKX",
+      "code": "584A",
+      "group": "g",
+      "date": "2026-06-23",
+      "price": 790,
+      "open": 1075,
+      "lead": "野村證券"
+    },
+    {
+      "name": "ネイス",
+      "code": "589A",
+      "group": "g",
+      "date": "2026-06-30",
+      "price": 1320,
+      "open": 1476,
+      "lead": "岡三証券"
+    },
+    {
+      "name": "チャットプラス",
+      "code": "598A",
+      "group": "g",
+      "date": "2026-07-15",
+      "price": 1080,
+      "open": 2284,
+      "lead": "丸三証券"
+    },
+    {
+      "name": "ティアフォー",
+      "code": "593A",
+      "group": "g",
+      "date": "2026-07-22",
+      "price": 1085,
+      "open": 1009,
+      "lead": "三菱UFJモルガン・スタンレー証券"
+    },
+    {
+      "name": "ビーエイブル",
+      "code": "604A",
+      "group": "s",
+      "date": "2026-07-29",
+      "price": 700,
+      "open": 1016,
+      "lead": "みずほ証券"
+    },
+    {
+      "name": "アイ・グリッド・ソリューションズ",
+      "code": "603A",
+      "group": "g",
+      "date": "2026-07-29",
+      "price": 770,
+      "open": 953,
+      "lead": "野村證券"
+    },
+    {
+      "name": "エブリー",
+      "code": "607A",
+      "group": "g",
+      "date": "2026-08-04",
+      "price": 230,
+      "open": 294,
+      "lead": "SMBC日興証券"
+    },
+    {
+      "name": "KOMPEITO",
+      "code": "618A",
+      "group": "g",
+      "date": "2026-09-11",
+      "price": 1600,
+      "open": 1480,
+      "lead": "SBI証券"
+    },
+    {
+      "name": "オーディオストック",
+      "code": "621A",
+      "group": "g",
+      "date": "2026-09-16",
+      "price": 1060,
+      "open": 1554,
+      "lead": "SBI証券"
+    },
+    {
+      "name": "オリバー",
+      "code": "619A",
+      "group": "s",
+      "date": "2026-09-16",
+      "price": 305,
+      "open": 310,
+      "lead": "野村證券"
+    },
+    {
+      "name": "Skyfall",
+      "code": "625A",
+      "group": "g",
+      "date": "2026-09-17",
+      "price": 1500,
+      "open": 1760,
+      "lead": "SBI証券"
+    },
+    {
+      "name": "akippa",
+      "code": "627A",
+      "group": "s",
+      "date": "2026-09-18",
+      "price": 570,
+      "open": 1244,
+      "lead": "SBI証券"
+    },
+    {
+      "name": "ベルテックス",
+      "code": "623A",
+      "group": "s",
+      "date": "2026-09-18",
+      "price": 550,
+      "open": 607,
+      "lead": "東海東京証券"
+    },
+    {
+      "name": "テクノクラフト",
+      "code": "622A",
+      "group": "s",
+      "date": "2026-09-18",
+      "price": 650,
+      "open": 620,
+      "lead": "SMBC日興証券"
+    },
+    {
+      "name": "かがやきホールディングス",
+      "code": "624A",
+      "group": "n",
+      "date": "2026-09-18",
+      "price": 720,
+      "open": 1206,
+      "lead": "東海東京証券"
+    },
+    {
+      "name": "レイヤード",
+      "code": "634A",
+      "group": "s",
+      "date": "2026-09-25",
+      "price": 1400,
+      "open": 2230,
+      "lead": "SBI証券"
+    },
+    {
+      "name": "アイビスホールディングス",
+      "code": "9334",
+      "group": "n",
+      "date": "2026-10-13",
+      "price": 520,
+      "open": 800,
+      "lead": "フィリップ・キャピタル証券"
+    },
+    {
+      "name": "ルクレ",
+      "code": "648A",
+      "group": "g",
+      "date": "2026-10-15",
+      "price": 1480,
+      "open": 2030,
+      "lead": "野村證券"
+    }
+  ],
+  "companies": [
+    {
+      "id": "togu",
+      "code": "652A",
+      "name": "トグルホールディングス",
+      "art": "it",
+      "group": "g",
+      "sector": "AI・不動産(再開発向け土地の仕入販売)",
+      "about": "独自のAI技術を活用した、再開発可能土地の仕入販売と、AIシステム・AIエージェントの開発などを行う会社です。",
+      "listing": "2026-10-30",
+      "bb": [
+        "2026-10-15",
+        "2026-10-21"
+      ],
+      "lo": 4030,
+      "hi": 4040,
+      "price": 4040,
+      "uw": {
+        "lead": "SMBC日興証券",
+        "others": [
+          [
+            "SBI証券",
+            "共同主幹事"
+          ]
+        ]
+      },
+      "links": [
+        [
+          "松井証券のIPOページ",
+          "https://www.matsui.co.jp/stock/ipo/list/2026/details/652A.html"
+        ],
+        [
+          "JPXの新規上場カレンダー(2026年10月)",
+          "https://www.jpx.co.jp/calendar/202610.html"
+        ]
+      ]
+    },
+    {
+      "id": "mabg",
+      "code": "653A",
+      "name": "MabGenesis",
+      "art": "deeptech",
+      "group": "g",
+      "sector": "バイオ(ペット用の抗体医薬品)",
+      "about": "ペット用の抗体医薬品の研究開発を行う会社です。",
+      "listing": "2026-11-02",
+      "bb": [
+        "2026-10-15",
+        "2026-10-21"
+      ],
+      "priceDate": "2026-10-22",
+      "lo": 800,
+      "hi": 830,
+      "price": 830,
+      "uw": {
+        "lead": "東海東京証券",
+        "others": [
+          [
+            "SBI証券",
+            "副幹事"
+          ]
+        ]
+      },
+      "pub": 940700,
+      "sec": 1047200,
+      "oa": 298000,
+      "founded": "2019年6月",
+      "hq": "神奈川県横浜市港北区",
+      "links": [
+        [
+          "JPXの新規上場会社の概要(PDF)",
+          "https://www.jpx.co.jp/listing/stocks/new/t13vrt00000261n8-att/11MabGenesis-Outline.pdf"
+        ],
+        [
+          "ipokiso.com",
+          "https://www.ipokiso.com/company/2026/mabgenesis.html"
+        ]
+      ]
+    },
+    {
+      "id": "allg",
+      "code": "656A",
+      "name": "Allganize Holdings",
+      "art": "it",
+      "group": "g",
+      "sector": "IT(AIエージェント・生成AIの基盤)",
+      "about": "企業の業務の自動化を支援する、AIエージェント・生成AIのプラットフォームを開発し、クラウド(SaaS)やオンプレミス(自社設置)の形で提供する会社です。",
+      "listing": "2026-11-04",
+      "bb": [
+        "2026-10-19",
+        "2026-10-23"
+      ],
+      "lo": 1250,
+      "hi": 1260,
+      "price": 1260,
+      "uw": {
+        "lead": "SMBC日興証券",
+        "others": [
+          [
+            "SBI証券",
+            "副幹事"
+          ]
+        ]
+      },
+      "pub": 658100,
+      "sec": 3496800,
+      "secNote": "売出株数にオーバーアロットメントを含む",
+      "lockup": "主要株主は180日間",
+      "fin": {
+        "label": "2025年9月期",
+        "sales": 1336,
+        "ni": 9
+      },
+      "links": [
+        [
+          "ipokiso.com",
+          "https://www.ipokiso.com/company/2026/allganize.html"
+        ]
+      ]
+    },
+    {
+      "id": "ltvx",
+      "code": "655A",
+      "name": "LTV-X",
+      "art": "it",
+      "group": "n",
+      "sector": "IT(顧客管理・マーケティングのクラウド)",
+      "about": "さまざまな業界の事業者向けに、顧客管理、マーケティングの自動化、業務の支援を行うクラウドシステムを開発・提供する会社です。主な製品は「LTV-Labシリーズ」「ふるさとLab」「LTV-Zaiko」です。",
+      "listing": "2026-11-05",
+      "bb": [
+        "2026-10-19",
+        "2026-10-23"
+      ],
+      "lo": 550,
+      "hi": 570,
+      "price": 570,
+      "uw": {
+        "lead": "Jトラストグローバル証券",
+        "others": [
+          [
+            "SBI証券",
+            "副幹事"
+          ]
+        ]
+      },
+      "pub": 367000,
+      "sec": 438000,
+      "secNote": "売出株数にオーバーアロットメントを含む",
+      "lockup": "主要株主の多くが180日間",
+      "fin": {
+        "label": "2026年3月期",
+        "sales": 445,
+        "ni": 98
+      },
+      "links": [
+        [
+          "ipokiso.com",
+          "https://www.ipokiso.com/company/2026/ltv-x.html"
+        ]
+      ]
+    },
+    {
+      "id": "estie",
+      "code": "658A",
+      "name": "estie",
+      "art": "it",
+      "group": "g",
+      "sector": "不動産テック(商業用不動産のデータ)",
+      "about": "独自に作った商業用不動産のデータベースを使い、データを活用したソリューションや専門的な情報サービスを提供する、不動産プラットフォーム事業の会社です。",
+      "listing": "2026-11-06",
+      "bb": [
+        "2026-10-21",
+        "2026-10-27"
+      ],
+      "lo": 1070,
+      "hi": 1100,
+      "price": null,
+      "uw": {
+        "lead": "SMBC日興証券",
+        "others": []
+      },
+      "pub": 50000,
+      "sec": 5638800,
+      "links": [
+        [
+          "松井証券のIPOページ",
+          "https://finance.matsui.co.jp/ipo/658A/index"
+        ]
+      ]
+    },
+    {
+      "id": "recep",
+      "code": "660A",
+      "name": "RECEPTIONIST",
+      "art": "it",
+      "group": "g",
+      "sector": "IT(クラウド受付システム)",
+      "about": "クラウド受付システム「RECEPTIONIST」の提供などを行う、クラウドサービス事業の会社です。",
+      "listing": "2026-11-10",
+      "bb": [
+        "2026-10-23",
+        "2026-10-29"
+      ],
+      "lo": 820,
+      "hi": 850,
+      "price": null,
+      "uw": {
+        "lead": "SBI証券",
+        "others": []
+      },
+      "pub": 50000,
+      "sec": 1416200,
+      "oa": 219900,
+      "founded": "2016年1月",
+      "hq": "東京都目黒区",
+      "links": [
+        [
+          "JPXの新規上場会社の概要(PDF)",
+          "https://www.jpx.co.jp/listing/stocks/new/t13vrt00000272wd-att/11RECEPTIONIST-Outline.pdf"
+        ],
+        [
+          "ipokiso.com",
+          "https://www.ipokiso.com/company/2026/receptionist.html"
+        ]
+      ]
+    },
+    {
+      "id": "hijojo",
+      "code": "657A",
+      "name": "HiJoJo Partners",
+      "art": "it",
+      "group": "g",
+      "sector": "金融(スタートアップ投資・ファンド販売)",
+      "about": "スタートアップ企業への投資と、投資先を組み入れたファンドの販売などを行う会社です。",
+      "listing": "2026-11-20",
+      "bb": [
+        "2026-11-05",
+        "2026-11-11"
+      ],
+      "bbNote": "抽選申込期間",
+      "assumed": 537.5,
+      "lo": null,
+      "hi": null,
+      "price": null,
+      "uw": {
+        "lead": "みずほ証券",
+        "others": [
+          [
+            "SMBC日興証券",
+            "共同主幹事"
+          ],
+          [
+            "SBI証券",
+            "副幹事"
+          ]
+        ]
+      },
+      "pub": 5405400,
+      "sec": 4954900,
+      "secNote": "売出株数にオーバーアロットメントを含む",
+      "lockup": "社長は360日間、一部の株主は約7か月間または180日間",
+      "fin": {
+        "label": "2025年10月期",
+        "sales": 1758,
+        "ni": 513
+      },
+      "links": [
+        [
+          "ipokiso.com",
+          "https://www.ipokiso.com/company/2026/hijojo-partners.html"
+        ]
+      ]
+    },
+    {
+      "id": "tokium",
+      "code": "664A",
+      "name": "TOKIUM",
+      "art": "it",
+      "group": "g",
+      "sector": "IT(経理のAIエージェント)",
+      "about": "経理の仕事の流れをまるごと受託し、その成果を納品する、経理AIエージェント「TOKIUM」を提供する会社です。",
+      "listing": "2026-11-25",
+      "bb": [
+        "2026-11-09",
+        "2026-11-13"
+      ],
+      "priceDate": "2026-11-16",
+      "assumed": 1620,
+      "lo": null,
+      "hi": null,
+      "price": null,
+      "uw": {
+        "lead": "SMBC日興証券",
+        "others": [
+          [
+            "野村證券",
+            "副幹事"
+          ]
+        ]
+      },
+      "pub": 617300,
+      "sec": 1100100,
+      "oa": 257600,
+      "founded": "2012年6月",
+      "hq": "東京都中央区",
+      "links": [
+        [
+          "JPXの新規上場会社の概要(PDF)",
+          "https://www.jpx.co.jp/listing/stocks/new/t13vrt000002gx40-att/11TOKIUM-Outline.pdf"
+        ],
+        [
+          "ipokiso.com",
+          "https://www.ipokiso.com/company/2026/tokium.html"
+        ]
+      ]
+    }
+  ]
+}

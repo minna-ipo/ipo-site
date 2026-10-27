@@ -1,0 +1,1433 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>みんなのIPO株</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
+</head>
+<body>
+<style>
+/* Layout: 上部ナビ(上場予定/過去のIPO) → 一覧は行カード+AI一言 → 詳細はAI結論から順に、評価・過去の初値売り・強みリスク・業績・IPO条件・証券会社 */
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --surface2:#F6F8FA;
+  --ink:#13202C; --ink2:#44566A; --ink3:#6B7B8A;
+  --line:#DDE3E9; --line2:#C6CFD8;
+  --accent:#1F5FBF; --accent-soft:#E6EEFA; --neg:#C25A1C; --star:#D9971A;
+  --gA:#16794F; --gA-bg:#E1F2EA;
+  --gB:#1F5FBF; --gB-bg:#E6EEFA;
+  --gC:#8E5B0A; --gC-bg:#FBEFD4;
+  --gD:#B03A2A; --gD-bg:#FBE4DF;
+  --plus:#16794F; --minus:#B03A2A;
+  --f-disp:'Zen Kaku Gothic New','Hiragino Sans','Yu Gothic','Meiryo',sans-serif;
+  --f-body:'BIZ UDPGothic','Hiragino Sans','Yu Gothic','Meiryo',sans-serif;
+  --f-num:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E151C; --surface:#151F28; --surface2:#1A2530;
+    --ink:#E7EDF2; --ink2:#AAB8C5; --ink3:#8596A5;
+    --line:#25323E; --line2:#34454F;
+    --accent:#7AAAF0; --accent-soft:#1A2B44; --neg:#EE9255; --star:#F0C14B;
+    --gA:#5BCB9C; --gA-bg:#15352A;
+    --gB:#7AAAF0; --gB-bg:#1A2B44;
+    --gC:#EBBE62; --gC-bg:#3A2F14;
+    --gD:#F2917F; --gD-bg:#40201B;
+    --plus:#5BCB9C; --minus:#F2917F;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E151C; --surface:#151F28; --surface2:#1A2530;
+  --ink:#E7EDF2; --ink2:#AAB8C5; --ink3:#8596A5;
+  --line:#25323E; --line2:#34454F;
+  --accent:#7AAAF0; --accent-soft:#1A2B44; --neg:#EE9255; --star:#F0C14B;
+  --gA:#5BCB9C; --gA-bg:#15352A;
+  --gB:#7AAAF0; --gB-bg:#1A2B44;
+  --gC:#EBBE62; --gC-bg:#3A2F14;
+  --gD:#F2917F; --gD-bg:#40201B;
+  --plus:#5BCB9C; --minus:#F2917F;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.75}
+a{color:inherit}
+.wrap{max-width:1040px;margin:0 auto;padding-block:20px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+h1,h2,h3,h4{font-family:var(--f-disp);margin:0;line-height:1.35;text-wrap:balance}
+p{margin:0}
+.up{color:var(--plus)} .down{color:var(--minus)}
+
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:26px}
+.brand{font-family:var(--f-disp);font-weight:900;font-size:44px;line-height:1.1;letter-spacing:.02em;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:10px}
+.brand-mark{width:48px;height:48px;display:block;flex:none}
+.brand small{display:inline-block;font-size:13px;font-weight:900;color:var(--surface);background:var(--accent);padding:4px 12px;border-radius:999px;letter-spacing:.03em;margin-top:8px;line-height:1.3}
+.top{background:var(--accent-soft);border-radius:16px;padding:18px 20px;border-bottom:0}
+.nav{display:flex;gap:4px}
+.nav{flex-wrap:wrap}
+.nav a{text-decoration:none;font-size:14px;padding:0 14px;min-height:44px;display:inline-flex;align-items:center;border-radius:8px;color:var(--ink2)}
+.nav a[aria-current="page"]{background:var(--ink);color:var(--bg)}
+.nav a:hover:not([aria-current="page"]){background:var(--surface2)}
+.nav a:focus-visible,.seg:focus-visible,.row:focus-visible,.back:focus-visible,summary:focus-visible,.jump:focus-visible,.sc a:focus-visible,.ev a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* shared bits */
+.chip{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:5px;font-family:var(--f-disp);font-weight:900;font-size:14px;line-height:1;flex:none}
+.chip.sm{width:20px;height:20px;font-size:12px;border-radius:4px}
+.chip.g-A,.gb.g-A,.vbig.g-A,.bigv.g-A,.scale span.on.g-A{background:var(--gA-bg);color:var(--gA)}
+.chip.g-B,.gb.g-B,.vbig.g-B,.bigv.g-B,.scale span.on.g-B{background:var(--gB-bg);color:var(--gB)}
+.chip.g-C,.gb.g-C,.vbig.g-C,.bigv.g-C,.scale span.on.g-C{background:var(--gC-bg);color:var(--gC)}
+.chip.g-D,.gb.g-D,.vbig.g-D,.bigv.g-D,.scale span.on.g-D{background:var(--gD-bg);color:var(--gD)}
+.stars{letter-spacing:2px;font-size:15px;white-space:nowrap}
+.stars .on{color:var(--star)} .stars .off{color:var(--line2)}
+.ai-ava{width:34px;height:34px;border-radius:10px;background:var(--accent);display:grid;place-items:center;flex:none}
+.ai-ava svg{width:20px;height:20px;display:block}
+.ai-chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--f-disp);font-weight:700;font-size:12px;color:var(--accent);background:var(--accent-soft);padding:1px 9px 1px 7px;border-radius:99px;white-space:nowrap}
+.ai-chip svg{width:11px;height:11px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px}
+.cap{font-size:12px;color:var(--ink3);margin-top:8px;display:flex;align-items:center;gap:8px;line-height:1.6}
+.cap i{display:inline-block;width:14px;height:10px;border-radius:2px;flex:none;background:var(--accent);background-image:repeating-linear-gradient(135deg,transparent 0 2px,var(--surface) 2px 4px)}
+.tblwrap{overflow-x:auto}
+
+/* list */
+.intro{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:28px;align-items:end;margin-bottom:24px}
+.intro h1{font-size:30px;font-weight:900;letter-spacing:.01em}
+.intro p{color:var(--ink2);margin-top:8px;max-width:34em}
+.criteria{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:grid;gap:6px;font-size:13px}
+.criteria-row{display:flex;align-items:center;gap:10px}
+.criteria small{color:var(--ink3);font-size:12px}
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.toolbar .lbl{font-size:12px;color:var(--ink3);margin-right:4px}
+.seg{appearance:none;border:1px solid var(--line2);background:var(--surface);color:var(--ink2);font:inherit;font-size:14px;padding:0 16px;min-height:44px;border-radius:8px;cursor:pointer}
+.seg[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.rows{display:grid;gap:12px}
+.row{border-radius:16px;display:grid;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;text-decoration:none;transition:border-color .15s,transform .15s}
+.row:hover{border-color:var(--accent);transform:translateY(-1px)}
+.row h2{font-size:19px;font-weight:700}
+.row .sector{color:var(--ink2);font-size:13px;margin-top:2px}
+.dline{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin-top:10px;font-size:13px}
+.dpill{background:var(--ink);color:var(--bg);border-radius:5px;padding:1px 10px;font-weight:700;font-size:13px;white-space:nowrap}
+.cd{font-weight:700;color:var(--accent);white-space:nowrap}
+.row .meta{color:var(--ink3);font-size:12px;margin-top:4px}
+.kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0}
+.kv div{min-width:0}
+.kv dt{font-size:12px;color:var(--ink3);line-height:1.4}
+.kv dd{margin:2px 0 0;font-size:15px;white-space:nowrap}
+.kv dd small{font-size:12px;color:var(--ink3);margin-left:1px}
+.grades{display:flex;gap:10px}
+.gb{display:grid;grid-template-columns:auto auto;grid-template-areas:"label label" "letter score";column-gap:8px;align-items:end;padding:8px 12px;border-radius:8px;min-width:116px}
+.gb-label{grid-area:label;font-size:12px;font-weight:700;letter-spacing:.04em}
+.gb-letter{grid-area:letter;font-family:var(--f-disp);font-weight:900;font-size:40px;line-height:1}
+.gb-score{grid-area:score;font-family:var(--f-num);font-size:13px;padding-bottom:4px;justify-self:end}
+.gb-score small{opacity:.7;font-size:11px}
+.ai-line{grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;background:var(--surface2);border-radius:8px;padding:10px 14px;font-size:13px}
+.ai-line .vd{font-weight:700}
+.ai-line .txt{color:var(--ink2);flex:1 1 260px;min-width:0}
+.ai-line .past{color:var(--ink2);white-space:nowrap}
+.ai-line .past b{font-family:var(--f-num);font-weight:500}
+
+.welcome{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px;align-items:center;margin-bottom:18px}
+.welcome h1{font-size:30px;font-weight:900;margin-top:10px;letter-spacing:.01em}
+.welcome p.lead2{color:var(--ink2);margin-top:8px;max-width:34em}
+.legend4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.lg{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.lg .chip{width:32px;height:32px;font-size:19px;border-radius:6px}
+.lg b{font-size:14px;display:block;line-height:1.3}
+.lg small{font-size:12px;color:var(--ink3);line-height:1.4;display:block}
+.how{display:flex;gap:8px 10px;list-style:none;margin:0 0 22px;padding:0;flex-wrap:wrap}
+.how li{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:5px 14px 5px 6px}
+.how b{width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-family:var(--f-num);font-size:12px;font-weight:500;flex:none}
+.vbig{width:108px;border-radius:12px;padding:12px 8px;text-align:center;display:grid;gap:2px;align-self:stretch;align-content:center}
+.vbig .l{font-family:var(--f-disp);font-weight:900;font-size:56px;line-height:1}
+.vbig .w{font-weight:700;font-size:15px}
+.rm .reason{margin-top:10px;font-size:14px;color:var(--ink)}
+.rp .pl{font-size:12px;color:var(--ink3)}
+.rp .pv{font-family:var(--f-num);font-size:28px;line-height:1.2}
+.rp .ps{font-size:12px;color:var(--ink2)}
+.dots{display:flex;gap:5px;margin-top:8px}
+.dots i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:700;color:#fff}
+.dots i.u{background:var(--plus)} .dots i.x{background:var(--minus)}
+.dn-t{font-size:12px;color:var(--ink2);margin-top:5px;line-height:1.5}
+.rf{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center;background:var(--surface2);border-radius:8px;padding:9px 14px;font-size:13px;color:var(--ink2)}
+.rf .it{display:inline-flex;align-items:center;gap:7px}
+.rf .it small{color:var(--ink3);font-size:12px}
+.bigv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center;border-radius:10px;padding:16px 20px}
+.bigv .l{font-family:var(--f-disp);font-weight:900;font-size:72px;line-height:1}
+.bigv .w{display:block;font-family:var(--f-disp);font-weight:900;font-size:28px;line-height:1.2}
+.bigv .s{display:block;font-size:13px;color:var(--ink2);margin-top:2px;line-height:1.6}
+.scale{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;font-size:12px;text-align:center}
+.scale span b{display:block;font-size:14px}
+.scale span{padding:6px 2px;border-radius:5px;background:var(--surface2);color:var(--ink3);line-height:1.4}
+.scale span.on{font-weight:700}
+.scale-cap{display:flex;justify-content:space-between;font-size:12px;color:var(--ink3);margin-top:-6px}
+.pred{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;background:var(--surface2);border-radius:10px;padding:12px 16px;margin-bottom:16px}
+.pred .pl{font-size:12px;color:var(--ink3)}
+.pred .pv{font-family:var(--f-num);font-size:30px;line-height:1.2}
+.pred .ps{font-size:12px;color:var(--ink2)}
+.note{font-size:12px;color:var(--ink3);margin-top:12px;line-height:1.7}
+.basis{margin-top:8px;font-size:12px;color:var(--ink2)}
+.basis summary{cursor:pointer;color:var(--accent);min-height:44px;display:flex;align-items:center}
+.basis ul{margin:6px 0 0;padding-left:1.2em;line-height:1.8}
+
+/* illustrations */
+.stage{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:center;gap:8px 24px;background:var(--accent-soft);border-radius:20px;padding:28px 30px;margin-bottom:14px;overflow:hidden}
+.stage h1{font-size:30px;font-weight:900;margin-top:10px;letter-spacing:.01em}
+.stage p.lead2{color:var(--ink2);margin-top:8px;max-width:32em}
+.stage-art svg{display:block;width:100%;height:auto;max-height:230px}
+.mc svg,.sa svg,.say svg{display:block}
+.sa{flex:none;width:60px}
+.sa svg{width:100%;height:auto}
+.rm-top{display:flex;gap:14px;align-items:flex-start}
+.rm-top>div{min-width:0}
+.vbig .mc{width:76px;margin:0 auto}
+.vbig .mc svg{width:100%;height:auto}
+.lw{display:grid;justify-items:center;gap:2px}
+.dhead-in{display:flex;gap:18px;align-items:center}
+.dhead-in .sa{width:88px}
+.say{display:flex;align-items:flex-end;gap:6px}
+.say .mc{width:104px;flex:none}
+.say .mc svg{width:100%;height:auto}
+.bubble{position:relative;background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-size:14px;font-weight:700;line-height:1.6;margin-bottom:30px}
+.bubble::before{content:"";position:absolute;left:-7px;bottom:16px;width:12px;height:12px;background:var(--surface2);border-left:1px solid var(--line);border-bottom:1px solid var(--line);transform:rotate(45deg)}
+.bubble small{display:block;font-weight:400;font-size:12px;color:var(--ink3)}
+.how svg{width:13px;height:13px;display:block}
+.pastbar{display:flex;align-items:center;gap:18px;margin-bottom:22px}
+.pastbar .mc{width:84px;flex:none}
+.pastbar h1{font-size:28px;font-weight:900}
+.pastbar p{color:var(--ink2);margin-top:6px;max-width:36em}
+
+/* detail head */
+.back{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--ink2);text-decoration:none;margin-bottom:6px;min-height:44px}
+.back:hover{color:var(--accent)}
+.dhead h1{font-size:28px;font-weight:900}
+.dhead .sector{color:var(--ink2);margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px;font-size:13px;color:var(--ink2)}
+.chips span{white-space:nowrap}
+.chips b{font-weight:400;color:var(--ink3);margin-right:6px;font-size:12px}
+
+/* schedule */
+.sched{margin-top:18px}
+.sched-top{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 14px;margin-bottom:14px}
+.sched-top h2{font-size:16px;font-weight:700}
+.sched-top .big{font-family:var(--f-disp);font-weight:900;font-size:26px;color:var(--accent);line-height:1.2}
+.sched-top .sub{font-size:13px;color:var(--ink2)}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;list-style:none;margin:0;padding:0}
+.step{position:relative;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--surface2)}
+.step .k{font-size:12px;color:var(--ink3);display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 6px}
+.step .d{font-size:15px;margin-top:2px}
+.step .e{font-size:12px;color:var(--ink3);line-height:1.5;margin-top:3px}
+.step.done{opacity:.6}
+.step.now{border-color:var(--accent);background:var(--accent-soft)}
+.step.next{border-color:var(--accent)}
+.step.last{background:var(--ink);border-color:var(--ink)}
+.step.last .k,.step.last .e{color:var(--bg);opacity:.75}
+.step.last .d{color:var(--bg);font-weight:700}
+.tag{font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap}
+.step.last .tag{color:var(--bg)}
+
+/* AI hero */
+.hero{margin-top:18px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:22px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:24px;align-items:stretch}
+.hero-l{display:flex;flex-direction:column;gap:12px}
+.hero-tag{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink2)}
+.hero-tag b{color:var(--ink);font-family:var(--f-disp)}
+.verdict{background:var(--accent-soft);border-radius:10px;padding:16px 18px;display:grid;gap:4px;flex:1}
+.verdict .vt{font-size:12px;color:var(--ink2)}
+.verdict .vw{font-family:var(--f-disp);font-weight:900;font-size:32px;line-height:1.2}
+.verdict .vs{font-size:13px;color:var(--ink2)}
+.verdict .stars{font-size:22px;margin-top:2px}
+.hero-grades{display:flex;gap:10px}
+.hero-grades .gb{flex:1}
+.hero-r h3{font-size:15px;font-weight:700;margin-bottom:10px}
+.pts{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.pts li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;font-size:15px;line-height:1.7}
+.pts .ic{width:22px;height:22px;border-radius:50%;background:var(--surface2);border:1px solid var(--line2);display:grid;place-items:center;font-family:var(--f-num);font-size:12px;color:var(--ink2);margin-top:2px}
+.pts li.hist .ic{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+
+/* sections */
+.sec{margin-top:36px}
+.sec>h2{font-size:18px;font-weight:700;margin-bottom:12px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.sec>h2 small{font-family:var(--f-body);font-weight:400;font-size:12px;color:var(--ink3)}
+.verdicts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.vhead{display:flex;align-items:center;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.vbadge{width:68px;height:68px;border-radius:10px;display:grid;place-items:center;font-family:var(--f-disp);font-weight:900;font-size:44px;line-height:1;flex:none}
+.vbadge.g-A{background:var(--gA-bg);color:var(--gA)}
+.vbadge.g-B{background:var(--gB-bg);color:var(--gB)}
+.vbadge.g-C{background:var(--gC-bg);color:var(--gC)}
+.vbadge.g-D{background:var(--gD-bg);color:var(--gD)}
+.vhead .t{font-size:12px;color:var(--ink3)}
+.vhead h3{font-size:17px;font-weight:700;margin-top:1px}
+.vhead .sc{font-size:13px;color:var(--ink2);margin-top:2px}
+.axes{display:grid;gap:18px;margin-top:16px}
+.axis-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:14px;font-weight:700}
+.axis-top .num{font-weight:500;font-size:13px;color:var(--ink2)}
+.easy{font-size:12px;color:var(--ink3);line-height:1.5;margin-top:1px}
+.track{height:6px;background:var(--line);border-radius:3px;margin:6px 0 7px;overflow:hidden}
+.fill{height:100%;border-radius:3px}
+.fill.g-A{background:var(--gA)} .fill.g-B{background:var(--gB)} .fill.g-C{background:var(--gC)} .fill.g-D{background:var(--gD)}
+.axis p.c{font-size:13px;color:var(--ink2);line-height:1.7}
+
+/* history / simulation */
+.sim-lead{font-size:16px;line-height:1.8}
+.sim-lead b{font-family:var(--f-num);font-weight:500;font-size:18px}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
+.tile{background:var(--surface2);border-radius:10px;padding:14px 16px}
+.tile .tl{font-size:12px;color:var(--ink3)}
+.tile .tv{font-family:var(--f-num);font-size:22px;margin-top:2px;white-space:nowrap}
+.tile .ts{font-size:12px;color:var(--ink2);font-family:var(--f-num)}
+.tile.mid{background:var(--accent-soft)}
+.cases{display:grid;gap:0;margin-top:4px}
+.case{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1.5fr) minmax(0,.8fr);gap:8px 18px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.case:first-child{border-top:0}
+.case .nm{font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.case .sub{font-size:12px;color:var(--ink3);line-height:1.5}
+.bw{position:relative;height:12px;background:var(--surface2);border-radius:3px}
+.bw .z{position:absolute;left:20%;top:-3px;bottom:-3px;width:1px;background:var(--line2)}
+.bw .b{position:absolute;top:0;bottom:0;border-radius:3px}
+.bw .b.p{background:var(--accent)}
+.bw .b.n{background:var(--neg)}
+.case .rt{text-align:right;line-height:1.4}
+.case .rt .pc{font-family:var(--f-num);font-size:16px;font-weight:500}
+.case .rt .yn{font-family:var(--f-num);font-size:12px;color:var(--ink2)}
+.case .mid{min-width:0}
+.case .px{font-size:12px;color:var(--ink3);margin-top:4px;font-family:var(--f-num)}
+.grp{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.grp h3{font-size:15px;font-weight:700;margin-bottom:10px}
+.gtbl{width:100%;border-collapse:collapse;font-size:14px}
+.gtbl th,.gtbl td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.gtbl th:first-child,.gtbl td:first-child{text-align:left;padding-left:0}
+.gtbl thead th{font-size:12px;color:var(--ink3);font-weight:400}
+.gtbl tr.me td{background:var(--accent-soft);font-weight:700}
+.gtbl tr.me td:first-child{padding-left:10px;border-radius:6px 0 0 6px}
+.gtbl tr.me td:last-child{border-radius:0 6px 6px 0}
+.gtbl tr:last-child td{border-bottom:0}
+.gtbl .lab{display:inline-flex;align-items:center;gap:8px}
+
+/* charts */
+.charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.chart-card h3{font-size:15px;font-weight:700}
+.chart-card .sub{font-size:12px;color:var(--ink3);margin-top:1px}
+.chart{position:relative;margin-top:10px;width:100%;min-height:240px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart .grid{stroke:var(--line)}
+.chart .zero{stroke:var(--line2)}
+.chart .tick{fill:var(--ink3);font:12px var(--f-num)}
+.chart .xl{fill:var(--ink2);font:12px var(--f-body)}
+.chart .val{fill:var(--ink);font:500 12px var(--f-num)}
+.chart .pos{fill:var(--accent)}
+.chart .negv{fill:var(--neg)}
+.chart .col{outline:none;cursor:default}
+.chart .col .bar{stroke:transparent;stroke-width:2}
+.chart .col:hover .bar,.chart .col:focus-visible .bar{stroke:var(--ink)}
+.chart .hit{fill:transparent}
+.tip{position:absolute;z-index:3;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:6px;padding:7px 10px;font-size:12px;line-height:1.55;white-space:nowrap;transform:translate(-50%,-100%);opacity:0;transition:opacity .1s}
+.tip.on{opacity:1}
+.tip b{font-weight:700}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
+.kpi{background:var(--surface2);border-radius:8px;padding:12px 14px}
+.kpi dt{font-size:12px;color:var(--ink3);line-height:1.4}
+.kpi dd{margin:3px 0 0;font-size:18px;white-space:nowrap}
+.kpi dd small{font-size:12px;color:var(--ink3);margin-left:2px}
+
+/* ipo terms */
+.ipo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.ipo h3{font-size:15px;font-weight:700;margin-bottom:12px}
+.stack{display:flex;gap:2px;height:30px;margin:4px 0 10px}
+.stack div{height:100%;min-width:6px}
+.stack div:first-child{border-radius:5px 0 0 5px}
+.stack div:last-child{border-radius:0 5px 5px 0}
+.s1{background:var(--accent)} .s2{background:var(--ink2)} .s3{background:var(--line2)}
+.slegend{display:grid;gap:6px;font-size:13px;margin-bottom:4px}
+.slegend div{display:flex;align-items:center;gap:8px}
+.slegend .sw{width:10px;height:10px;border-radius:2px;flex:none}
+.slegend .v{margin-left:auto;color:var(--ink2);font-size:13px;white-space:nowrap}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th,.tbl td{padding:8px 0;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.tbl tr:last-child th,.tbl tr:last-child td{border-bottom:0}
+.tbl th{font-weight:400;color:var(--ink3);font-size:12px;width:46%;padding-right:12px}
+.tbl td{text-align:right}
+.tbl td small{display:block;color:var(--ink3);font-size:12px;line-height:1.5}
+
+/* underwriters */
+.uw{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:16px}
+.lead-b{display:grid;gap:6px}
+.lead-b .t{font-size:12px;color:var(--ink3)}
+.lead-b h3{font-size:20px;font-weight:900}
+.lead-b .ty{font-size:13px;color:var(--ink2)}
+.lead-b .nt{font-size:13px;color:var(--ink2);margin-top:2px}
+.rec{margin-top:10px;background:var(--surface2);border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.7}
+.rec b{font-family:var(--f-num);font-weight:500}
+.alloc{display:grid;gap:12px}
+.alloc-row{display:grid;grid-template-columns:minmax(0,1fr) 52px;gap:4px 12px;align-items:center}
+.alloc-row .nm{font-size:14px;font-weight:700}
+.alloc-row .nm small{font-weight:400;color:var(--ink3);font-size:12px;margin-left:6px}
+.alloc-row .pc{text-align:right;font-family:var(--f-num);font-size:14px}
+.alloc-row .tk{grid-column:1/-1;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.alloc-row .tk i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.alloc-row.lead .tk i{background:var(--ink)}
+.alloc-row .ds{grid-column:1/-1;font-size:12px;color:var(--ink3);line-height:1.5}
+.retail{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--ink2)}
+
+/* strengths risks */
+.sr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.sr h3{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.sr h3::before{content:"";width:10px;height:10px;border-radius:2px;background:var(--gA)}
+.sr .risk h3::before{background:var(--gD)}
+.item{padding:14px 0;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0}
+.item h4{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.item p{font-size:13px;color:var(--ink2);margin-top:3px;line-height:1.75}
+.sev{font-family:var(--f-body);font-size:12px;font-weight:700;padding:0 7px;border-radius:4px;line-height:1.7;border:1px solid currentColor}
+.sev.hi{color:var(--gD)} .sev.mid{color:var(--gC)} .sev.lo{color:var(--ink3)}
+
+/* past page */
+.stat-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.stat .tl{font-size:12px;color:var(--ink3)}
+.stat .tv{font-family:var(--f-num);font-size:24px;margin-top:2px;white-space:nowrap}
+.stat .ts{font-size:12px;color:var(--ink2)}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.ptbl{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+.ptbl th,.ptbl td{padding:10px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;vertical-align:middle}
+.ptbl th:first-child,.ptbl td:first-child{text-align:left;padding-left:0}
+.ptbl thead th{font-size:12px;color:var(--ink3);font-weight:400}
+.ptbl td.l,.ptbl th.l{text-align:left}
+.ptbl .nm{font-weight:700;font-size:14px}
+.ptbl .sub{font-size:12px;color:var(--ink3);font-weight:400}
+.ptbl .bw{width:130px}
+
+/* glossary & footer */
+.gloss{margin-top:40px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px 20px}
+.gloss summary{cursor:pointer;padding:14px 0;font-family:var(--f-disp);font-weight:700;font-size:15px;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.gloss summary::-webkit-details-marker{display:none}
+.gloss summary::after{content:"+";font-family:var(--f-num);font-size:18px;color:var(--ink3)}
+.gloss[open] summary::after{content:"−"}
+.gloss dl{margin:0;padding-bottom:12px;display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr);gap:0 20px}
+.gloss dt,.gloss dd{padding:10px 0;border-top:1px solid var(--line);margin:0;font-size:13px}
+.gloss dt{font-weight:700}
+.gloss dd{color:var(--ink2);line-height:1.75}
+.foot{margin-top:28px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--ink3);line-height:1.8;display:grid;gap:4px}
+
+
+/* ---- v3: sample notice, beginner entrance, list, detail parts ---- */
+.entry{display:flex;align-items:center;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 18px;text-decoration:none;margin-bottom:22px;min-height:44px;color:inherit}
+.entry:hover{border-color:var(--accent)}
+.entry:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.entry b{font-family:var(--f-disp);font-size:17px;display:block}
+.entry span.t{font-size:14px;color:var(--ink2);display:block;line-height:1.6}
+.guide-steps{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:14px}
+.gs{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.gs .sn{width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-family:var(--f-num);font-size:17px}
+.gs h2{font-size:19px;font-weight:700;margin-bottom:6px}
+.gs p{font-size:15px;color:var(--ink2);line-height:1.8}
+.btn{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:10px;background:var(--ink);color:var(--bg);text-decoration:none;font-weight:700;font-size:15px;margin-top:12px}
+.btn.ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line2)}
+.sample-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;background:var(--gC-bg);border:1px solid var(--gC);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:14px;line-height:1.7}
+.sb-tag{background:var(--gC);color:var(--surface);font-weight:700;border-radius:5px;padding:0 10px;font-size:13px;white-space:nowrap}
+.badge-s{display:inline-block;background:var(--gC-bg);color:var(--gC);border:1px solid var(--gC);border-radius:5px;font-size:12px;font-weight:700;padding:0 8px;line-height:1.7;white-space:nowrap;font-family:var(--f-body)}
+.term .tw{border-bottom:1px dotted var(--ink3)}
+.term .tdesc{color:var(--ink3);font-size:inherit}
+.start{margin:4px 0 26px}
+.start>h2{font-size:21px;font-weight:900}
+.start>p{color:var(--ink2);margin-top:4px}
+.start-grid{list-style:none;margin:14px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}
+.sc{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.sc:hover{border-color:var(--accent)}
+.sc>a,.sc summary{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 12px;padding:16px;text-decoration:none;cursor:pointer;list-style:none;min-height:44px;color:inherit}
+.sc summary::-webkit-details-marker{display:none}
+.sc .sn{grid-row:1/4;width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-family:var(--f-num);font-size:16px}
+.sc .st{font-family:var(--f-disp);font-weight:700;font-size:17px;line-height:1.4}
+.sc .sd{font-size:14px;color:var(--ink2);line-height:1.6}
+.sc .go{margin-top:6px}
+.go{font-size:14px;color:var(--accent);font-weight:700}
+.sc-body{padding:0 16px 16px 62px;font-size:14px;color:var(--ink2)}
+.sc-body ul{margin:0;padding-left:1.2em;display:grid;gap:8px;line-height:1.75}
+.rh{display:flex;gap:14px;align-items:flex-start}
+.rh>div{min-width:0}
+.rh .sa{width:56px}
+.rh h2{font-size:19px;font-weight:700;display:flex;gap:8px 10px;align-items:center;flex-wrap:wrap}
+.facts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0}
+.facts .f{background:var(--surface2);border-radius:10px;padding:10px 12px;min-width:0}
+.facts .f.main{background:var(--accent-soft)}
+.facts dt{font-size:12px;color:var(--ink3);line-height:1.4}
+.facts dd{margin:3px 0 0;font-size:16px;line-height:1.5}
+.facts dd small{display:block;font-size:12px;color:var(--ink2);line-height:1.5;margin-top:2px}
+.facts.f3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.refline{font-size:14px;color:var(--ink2);display:flex;gap:10px;align-items:flex-start;line-height:1.7}
+.refline small{display:block;color:var(--ink3);font-size:12px}
+.row .go{justify-self:end}
+.jumps{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.jump{appearance:none;border:1px solid var(--line2);background:var(--surface);color:var(--ink2);font:inherit;font-size:14px;padding:0 16px;border-radius:99px;cursor:pointer;min-height:44px}
+.jump:hover{border-color:var(--accent);color:var(--accent)}
+.part{margin-top:46px;scroll-margin-top:12px}
+.phead{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;margin-bottom:14px}
+.phead .pn{width:32px;height:32px;border-radius:8px;background:var(--ink);color:var(--bg);display:inline-grid;place-items:center;font-family:var(--f-num);font-size:15px;flex:none}
+.phead h2{font-size:22px;font-weight:900}
+.phead small{font-size:13px;color:var(--ink3)}
+.part .sec{margin-top:26px}
+.part .sec>h2{font-size:16px}
+.about-row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 16px;padding:12px 0;border-top:1px solid var(--line)}
+.about-row:first-child{border-top:0;padding-top:0}
+.about-row .k{font-size:13px;color:var(--ink3)}
+.fund2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.fund2 .mini,.mini{font-size:14px;font-weight:700;margin-bottom:6px}
+.big2{font-family:var(--f-num);font-size:28px;line-height:1.3}
+.muted{font-size:13px;color:var(--ink3);line-height:1.7}
+.check-sum{font-size:15px;margin-bottom:4px}
+.checks{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}
+.ck{display:grid;grid-template-columns:112px minmax(0,1fr);gap:4px 14px;align-items:start;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.ck .lv{font-size:13px;font-weight:700;border-radius:6px;padding:3px 8px;text-align:center;white-space:nowrap}
+.ck.lv-ok .lv{background:var(--gA-bg);color:var(--gA)}
+.ck.lv-chk .lv{background:var(--gC-bg);color:var(--gC)}
+.ck.lv-warn .lv{background:var(--gD-bg);color:var(--gD)}
+.ck b{font-size:15px;display:block}
+.ck p{font-size:14px;color:var(--ink2);margin-top:2px;line-height:1.75}
+.ref{display:grid;gap:14px}
+.ref-top{display:flex;gap:12px;align-items:center}
+.ref-top .chip{width:40px;height:40px;font-size:24px;border-radius:8px}
+.ref-top b{font-size:16px}
+.ref-top p{font-size:13px;color:var(--ink2);line-height:1.6}
+.src{font-size:12px;color:var(--ink3);margin-top:12px;line-height:1.7}
+.meta2{font-size:12px;color:var(--ink2);margin-top:2px;line-height:1.6}
+.evlist{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:8px}
+.ev{display:grid;grid-template-columns:210px minmax(0,1fr) auto;gap:4px 16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+.ev .d{font-family:var(--f-num);font-size:14px}
+.ev b{font-size:15px}
+.ev .ec a{color:var(--accent);font-weight:700;margin-left:8px;display:inline-block;padding:4px 0}
+.ev p{font-size:13px;color:var(--ink2)}
+.ev .est{font-size:14px;font-weight:700;white-space:nowrap}
+.ev.done{opacity:.6}
+.ev.listday{border-color:var(--ink)}
+.pg h1{font-size:28px;font-weight:900}
+.pg>p{color:var(--ink2);margin-top:6px;max-width:40em}
+.pg .panel{margin-top:14px}
+.points{margin:0;padding-left:1.3em;display:grid;gap:8px;line-height:1.8;font-size:14px}
+.fcard{margin-top:14px}
+.fc-h{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin-bottom:12px}
+.fc-h h3{font-size:18px;font-weight:700}
+.fc-h a{display:inline-flex;align-items:center;min-height:44px;padding:4px 0;text-decoration:underline;text-underline-offset:3px}
+.legend-box{margin-top:26px}
+.legend-box>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-family:var(--f-disp);font-weight:700;font-size:15px}
+
+@media (max-width:860px){
+  .intro{grid-template-columns:minmax(0,1fr);gap:16px}
+  .row{grid-template-columns:minmax(0,1fr);gap:14px}
+  .vbig{width:auto;display:flex;align-items:center;justify-content:center;gap:12px;padding:8px 12px}
+  .lw{display:flex;align-items:baseline;gap:10px}
+  .vbig .l{font-size:34px}
+  .stage{grid-template-columns:minmax(0,1fr);padding:22px 18px}
+  .stage-art{order:-1;max-width:320px;margin:0 auto}
+  .legend4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .welcome{grid-template-columns:minmax(0,1fr)}
+  .start-grid,.fund2{grid-template-columns:minmax(0,1fr)}
+  .facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .facts .f.main{grid-column:1/-1}
+  .facts.f3{grid-template-columns:minmax(0,1fr)}
+  .ev{grid-template-columns:minmax(0,1fr)}
+  .about-row{grid-template-columns:minmax(0,1fr)}
+  .grades .gb{flex:1}
+  .verdicts,.charts,.ipo,.sr,.uw,.two,.hero,.welcome{grid-template-columns:minmax(0,1fr)}
+  .kpis,.stat-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .case{grid-template-columns:minmax(0,1fr) auto}
+  .case .mid{grid-column:1/-1;order:3}
+}
+@media (max-width:520px){
+  body{font-size:16px}
+  .intro h1,.dhead h1,.welcome h1,.pg h1{font-size:24px}
+  .ck{grid-template-columns:minmax(0,1fr)}
+  .ck .lv{justify-self:start}
+  .phead h2{font-size:20px}
+  .sc-body{padding-left:16px}
+  .big2{font-size:24px}
+  .stage h1{font-size:24px}
+  .say .mc{width:76px}
+  .dhead-in .sa{width:60px}
+  .pastbar .mc{width:60px}
+  .pastbar h1{font-size:22px}
+  .bigv .l{font-size:56px}
+  .panel,.hero{padding:16px}
+  .kv dd{font-size:14px}
+  .tiles{grid-template-columns:minmax(0,1fr)}
+  .tile{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .tile .tv{font-size:20px}
+  .gloss dl{grid-template-columns:minmax(0,1fr)}
+  .gloss dt{padding-bottom:0;border-bottom:0}
+  .gloss dd{border-top:0;padding-top:2px}
+  .verdict .vw{font-size:28px}
+}
+
+.ratings{display:flex;gap:8px;margin-left:auto;flex:none}
+.rtg{display:grid;grid-template-columns:auto;justify-items:center;align-content:center;min-width:64px;padding:6px 8px 6px;border-radius:10px;gap:0}
+.rtg small{font-size:12px;font-weight:700;line-height:1.3;white-space:nowrap}
+.rtg b{font-family:var(--f-disp);font-weight:900;font-size:32px;line-height:1.05}
+.rtg.g-A{background:var(--gA-bg);color:var(--gA)}.rtg.g-B{background:var(--gB-bg);color:var(--gB)}.rtg.g-C{background:var(--gC-bg);color:var(--gC)}.rtg.g-D{background:var(--gD-bg);color:var(--gD)}
+.rh .rn{flex:1;min-width:0}
+.dhead-in>div:not(.ratings){min-width:0}
+.dhead-in .ratings{margin-left:auto}
+.cal{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:16px}
+.cal-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cal-t{font-size:20px;font-weight:900;margin:0}
+.calnav{min-height:44px;padding:0 14px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);border-radius:8px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.calnav:disabled{opacity:.4;cursor:default}
+.cal-key{display:flex;flex-wrap:wrap;gap:6px 16px;margin:10px 0;font-size:13px;color:var(--ink2)}
+.cal-key span{display:inline-flex;align-items:center;gap:6px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex:none;background:var(--ink3)}
+.dot.k-bb{background:var(--accent)}.dot.k-pr{background:var(--star)}.dot.k-ap{background:var(--gA)}.dot.k-ls{background:var(--gD)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal-w{text-align:center;font-size:13px;font-weight:700;color:var(--ink2);padding:4px 0}
+.cal-w.sun,.cal-c.sun .n{color:var(--gD)}.cal-w.sat,.cal-c.sat .n{color:var(--gB)}
+.cal-c{min-height:64px;border-radius:8px;border:1px solid var(--line);background:var(--surface2);padding:4px;display:flex;flex-direction:column;gap:3px;align-items:stretch;text-align:left;font:inherit;color:var(--ink);min-width:0}
+.cal-c.blank{border:0;background:none}
+.cal-c .n{font-family:var(--f-num);font-size:14px;font-weight:700;line-height:1.2}
+.cal-c.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.cal-c.today .n{background:var(--accent);color:var(--surface);border-radius:4px;padding:0 5px;align-self:flex-start}
+button.cal-c{cursor:pointer;background:var(--surface)}
+button.cal-c.has{border-color:var(--ink3)}
+button.cal-c.sel{background:var(--accent-soft);border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.mk{display:flex;flex-wrap:wrap;gap:3px}
+.pill{display:inline-flex;align-items:center;gap:3px;min-width:0}
+.pill .pl{display:none;font-size:12px;font-weight:700;line-height:1.2;white-space:nowrap}
+.cal-sel{margin-top:14px}
+.cal-sel h3{font-size:16px;font-weight:700}
+.ev.k-bb{border-left:4px solid var(--accent)}.ev.k-pr{border-left:4px solid var(--star)}.ev.k-ap{border-left:4px solid var(--gA)}.ev.k-ls{border-left:4px solid var(--gD)}
+@media (min-width:700px){
+  .cal-c{min-height:92px;padding:6px}
+  .pill{width:100%;padding:1px 5px;border-radius:4px;background:var(--surface2)}
+  .pill.k-bb{background:var(--accent-soft)}
+  .pill .pl{display:inline}
+  .mk{flex-direction:column;flex-wrap:nowrap}
+}
+@media (max-width:640px){
+  .rh{flex-wrap:wrap}.rh .rn{flex:1 1 calc(100% - 72px)}.rh .ratings{margin-left:70px;flex:1 1 100%;margin-left:0}
+  .ratings{width:100%}.rtg{flex:1;min-width:0}
+  .dhead-in{flex-wrap:wrap}
+  .calnav{padding:0 10px;font-size:13px}.cal{padding:10px}.cal-c{min-height:56px;padding:3px}
+}
+
+.rtg.pf{min-width:150px;padding:6px 12px}
+.rtg.pf b{font-size:24px;font-family:var(--f-num);font-weight:700;white-space:nowrap}
+.rtg.pf.up{background:var(--gA-bg);color:var(--plus)}.rtg.pf.down{background:var(--gD-bg);color:var(--minus)}
+.profit{margin-top:14px;border:2px solid var(--plus);background:var(--gA-bg);border-radius:14px;padding:14px 16px}
+.profit.down{border-color:var(--minus);background:var(--gD-bg)}
+.pf-main{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px}
+.pf-l{font-weight:900;font-size:16px}.pf-l small{display:block;font-size:12px;font-weight:400;color:var(--ink2);margin-top:2px}
+.pf-v{font-family:var(--f-num);font-weight:700;font-size:40px;line-height:1.1}
+.profit.up .pf-v{color:var(--plus)}.profit.down .pf-v{color:var(--minus)}
+.pf-sub{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px;font-size:14px;font-weight:700}
+.pf-n{font-size:12px;color:var(--ink2);margin-top:6px}
+.co-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.co-tabs .seg{min-height:44px}
+.kds{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kd-h{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-bottom:10px}
+.kd-h a{text-decoration:none;font-size:17px;display:inline-flex;align-items:center;min-height:44px}
+.kd-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.kd{border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;background:var(--surface2);border-top:4px solid var(--accent);min-width:0}
+.kd.ke{border-top-color:var(--neg)}.kd.kl2{border-top-color:var(--gD)}
+.kd .kl{font-size:13px;font-weight:700;color:var(--ink2)}
+.kd b{font-family:var(--f-num);font-size:24px;line-height:1.2;font-weight:700}
+.kd .kc{font-size:14px;font-weight:700;color:var(--accent)}
+.kd.ke .kc{color:var(--neg)}.kd.kl2 .kc{color:var(--gD)}.kd.done{opacity:.6}
+.pill.edge{font-weight:900;outline:2px solid var(--accent);outline-offset:-1px}
+@media (max-width:640px){
+  .brand{font-size:32px}.brand-mark{width:38px;height:38px;flex:none}.brand small{font-size:12px}.pf-v{font-size:34px}.rtg.pf{min-width:0;flex:2.2}.kd b{font-size:19px}.kd{padding:8px 8px}
+}
+
+.stage h1{font-size:52px;line-height:1.1;color:var(--accent);letter-spacing:.02em;margin-top:6px}
+.stage h1 .hb{display:block;font-size:24px;color:var(--ink);margin-bottom:2px}
+.hero-tag{display:inline-block;margin-top:12px;background:var(--accent);color:var(--surface);font-weight:900;font-size:16px;padding:6px 14px;border-radius:999px}
+.entry{margin-top:22px;padding:10px 14px;background:var(--surface2)}
+.entry b{font-size:14px}
+@media (max-width:640px){.stage h1{font-size:40px}.stage h1 .hb{font-size:20px}.hero-tag{font-size:14px}}
+
+.unk{border:2px dashed var(--line2);background:var(--surface2)}
+.unk h3{font-size:16px}
+.unk .tag{margin-left:6px}
+.links a{color:var(--accent);font-weight:700;text-decoration:underline;text-underline-offset:3px;display:inline-flex;align-items:center;min-height:44px}
+.chart-top{margin-top:8px}
+@media (prefers-reduced-motion:reduce){.row,.tip{transition:none}.row:hover{transform:none}}
+</style>
+
+<div class="wrap">
+  <div class="sample-bar" role="note"><span class="sb-tag">実データ・要確認</span><span>最新の更新日時点で、JPX(日本取引所グループ)の公表資料と複数のIPO情報サイトから調べてまとめた情報です。誤りや古い情報が含まれる場合があります。申込の前に、必ず公式の情報で確認してください。</span></div>
+  <header class="top">
+    <a class="brand" href="#">
+      <svg class="brand-mark" viewBox="0 0 22 22" aria-hidden="true"><rect x="2" y="12" width="4" height="8" rx="1" fill="var(--ink3)"/><rect x="9" y="7" width="4" height="13" rx="1" fill="var(--ink2)"/><rect x="16" y="2" width="4" height="18" rx="1" fill="var(--accent)"/></svg>
+      <span>みんなのIPO株</span>
+    </a>
+    <nav class="nav" id="nav" aria-label="メニュー"><a href="#" data-n="list">上場予定</a><a href="#schedule" data-n="schedule">日程カレンダー</a><a href="#funds" data-n="funds">必要資金・申込先</a><a href="#past" data-n="past">過去のIPO</a><a href="#guide" data-n="guide">はじめての方へ</a></nav>
+  </header>
+  <main id="app"></main>
+
+  <details class="gloss">
+    <summary>用語をやさしく解説</summary>
+    <dl>
+      <dt>参考判定(A〜D)</dt><dd>2026年に上場した過去のIPOのうち、同じ市場(グロース・スタンダードなど)のものを集め、その初値の結果から傾向をまとめたものです。A=上がりやすい傾向、B=やや上がりやすい傾向、C=どちらとも言えない、D=下がりやすい傾向。値上がりや値下がりを約束するものではありません。</dd>
+      <dt>IPO</dt><dd>会社の株が、はじめて証券取引所で売り買いできるようになること。「新規公開株」とも呼ばれます。</dd>
+      <dt>仮条件・公開価格</dt><dd>仮条件は、株の値段のおおよその範囲。投資家の希望をもとに最終的に決まる値段が公開価格で、IPOに申し込んで当たった人は、この値段で買えます。</dd>
+      <dt>ブックビルディング</dt><dd>公開価格を決める前に、投資家が「いくらなら何株買いたい」と申告する期間です。</dd>
+      <dt>初値(はつね)</dt><dd>上場した日に、はじめてついた株価。公開価格より高ければ、その差が利益になります。</dd>
+      <dt>公募・売出し</dt><dd>公募は、会社が新しく株を発行してお金を集めること(会社にお金が入る)。売出しは、すでにいる株主が持ち株を売ること(会社にお金は入らない)。</dd>
+      <dt>吸収金額</dt><dd>公募と売出しで市場に出る株の合計金額。大きいほど、買い手が足りなくなって株価が上がりにくくなります。</dd>
+      <dt>オーバーアロットメント</dt><dd>需要が多いときに、主幹事の証券会社が追加で売る株のこと。公募・売出しの最大15%程度です。</dd>
+      <dt>ロックアップ</dt><dd>上場後しばらくの間、大株主が株を売らないという約束。期間が短いと、解除後に売りが出て株価が下がりやすくなります。</dd>
+      <dt>PER・PSR</dt><dd>株価が割高か割安かを見る目安。PERは利益の何倍か、PSRは売上の何倍か。同業の平均より低いと割安、高いと割高と見ます。</dd>
+      <dt>主幹事</dt><dd>上場の手続きを中心になって進める証券会社。株の配分も一番多く担当します。</dd>
+    </dl>
+  </details>
+
+  <footer class="foot">
+    <p>掲載内容は最新の更新日時点で、JPXの新規上場会社の概要資料と、複数のIPO情報サイト(ipokiso.com、kabusyo.com、kabu.bridge-salon.jp、松井証券)をもとに、このサイトの作成者がAI(Claude)を使って調べてまとめたものです。情報源どうしで数字が食い違う場合があり、誤りや古い情報が含まれる可能性があります。申込の前に、必ずJPXの資料と、申込先の証券会社の案内で確認してください。</p>
+    <p>参考判定と「儲かる金額の予想」は、2026年に上場した過去のIPOのうち、同じ市場のものの初値の平均から計算した参考値です。簡易な計算で、将来の値上がりを約束するものではありません。手数料・税金は含みません。投資判断の助言ではありません。</p>
+    <p>このサイトでは、IPOの申込や株の売買はできません。</p>
+  </footer>
+</div>
+
+<script>
+function boot(D){
+  /* ---------- 証券会社(名前のみ) ---------- */
+  var BROKER_NAMES = ['SBI証券','SMBC日興証券','野村證券','みずほ証券','大和証券','東海東京証券','岡三証券','Jトラストグローバル証券','フィリップ・キャピタル証券','丸三証券','三菱UFJモルガン・スタンレー証券'];
+
+  /* ---------- 過去のIPO(2026年の上場実績・実データ) ---------- */
+  // [名前, コード, 市場グループ(g=グロース, s=スタンダード, n=名証ネクスト), 上場日, 公開価格, 初値, 主幹事]
+  var MKT = D.markets;
+  var PAST_RAW = D.past.map(function(p){ return [p.name, p.code, p.group, p.date, p.price, p.open, p.lead]; });
+  var PAST = PAST_RAW.map(function(r, i){
+    return {id:i, name:r[0], code:r[1], group:r[2], date:r[3], price:r[4], open:r[5], lead:r[6],
+      ret:(r[5]/r[4]-1)*100, pl:(r[5]-r[4])*100};
+  });
+
+  /* ---------- 上場予定企業(実データ・2026年10月27日時点) ---------- */
+  // bb=ブックビルディング期間(申込期間), price=公開価格(決定済み), hi=仮条件の上限, assumed=想定価格
+  var COMPANIES = D.companies;
+
+  var EASY = {};
+
+  /* ---------- helpers ---------- */
+  var RANK = {A:4, B:3, C:2, D:1};
+  var AIV = {
+    A:['上がりやすい傾向','同じ市場の過去のIPOでは、初値が公開価格を上回ることが多くありました。','上がりやすい'],
+    B:['やや上がりやすい傾向','同じ市場の過去のIPOでは、初値が公開価格を上回ることがやや多くありました。','やや上がりやすい'],
+    C:['どちらとも言えない','同じ市場の過去のIPOでは、上がっても小幅で、下がることもありました。','どちらとも言えない'],
+    D:['下がりやすい傾向','同じ市場の過去のIPOでは、初値が公開価格を下回ることが多くありました。','下がりやすい']
+  };
+  function aiGrade(s){
+    var w = s.n ? s.win / s.n : 0;
+    if(s.avg >= 20 && w >= 0.75) return 'A';
+    if(s.avg >= 10 && w >= 0.5) return 'B';
+    if(s.avg >= 0 && w >= 0.5) return 'C';
+    return 'D';
+  }
+  function gradeOf(s){ return s >= 75 ? 'A' : (s >= 60 ? 'B' : (s >= 45 ? 'C' : 'D')); }
+  function avg(axes){ var t = 0; axes.forEach(function(a){ t += a[1]; }); return t / axes.length; }
+  function fmt(n, d){ return Number(n).toLocaleString('ja-JP', {minimumFractionDigits: d||0, maximumFractionDigits: d||0}); }
+  function sgn(n){ return n < 0 ? '−' + fmt(Math.abs(n)) : fmt(n); }
+  function oku(shares, price){ return shares * price / 1e8; }
+  function parse(s){ var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function today0(){ var d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function daysTo(s){ return Math.round((parse(s) - today0()) / 864e5); }
+  function wd(s){ return '日月火水木金土'.charAt(parse(s).getDay()); }
+  function dateJa(s){ var p = s.split('-'); return p[0] + '年' + Number(p[1]) + '月' + Number(p[2]) + '日(' + wd(s) + ')'; }
+  function md(s){ var p = s.split('-'); return Number(p[1]) + '/' + Number(p[2]) + '(' + wd(s) + ')'; }
+  function ym(s){ var p = s.split('-'); return p[0] + '年' + Number(p[1]) + '月'; }
+  function pct(n, d){ return (n >= 0 ? '+' : '−') + Math.abs(n).toFixed(d == null ? 0 : d) + '%'; }
+  function yen(n){ return (n >= 0 ? '+' : '−') + fmt(Math.abs(Math.round(n))) + '円'; }
+  function cls(n){ return n >= 0 ? 'up' : 'down'; }
+  function stars(n){
+    var on = '', off = '';
+    for(var i = 0; i < 5; i++){ if(i < n) on += '★'; else off += '★'; }
+    return '<span class="stars" role="img" aria-label="AIおすすめ度 5段階中' + n + '"><span class="on">' + on + '</span><span class="off">' + off + '</span></span>';
+  }
+  var SPARK = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.5l1.9 5.6 5.6 1.9-5.6 1.9L10 16.5l-1.9-5.6-5.6-1.9 5.6-1.9z" fill="#fff"/><path d="M16 12.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" fill="#fff" opacity=".75"/></svg>';
+  function avatar(){ return '<span class="ai-ava">' + SPARK + '</span>'; }
+
+  function stats(list){
+    var n = list.length, sum = 0, win = 0, mn = 1e9, mx = -1e9;
+    list.forEach(function(p){ sum += p.ret; if(p.ret > 0) win++; mn = Math.min(mn, p.ret); mx = Math.max(mx, p.ret); });
+    return {n:n, avg:n ? sum / n : 0, win:win, lose:n - win, min:mn, max:mx};
+  }
+  function simList(c){
+    var same = PAST.filter(function(p){ return p.group === c.group; });
+    return same.length >= 5 ? same : PAST;
+  }
+
+  COMPANIES.forEach(function(c){
+    c.mkt = MKT[c.group];
+    if(c.price){ c.base = c.price; c.baseLabel = '公開価格'; }
+    else if(c.hi){ c.base = c.hi; c.baseLabel = '仮条件の上限'; }
+    else { c.base = c.assumed; c.baseLabel = '想定価格'; }
+    c.sched = [['ブックビルディング', c.bb[0], c.bb[1], '投資家が希望の価格を申告する期間']];
+    if(c.priceDate) c.sched.push(['公開価格の決定', c.priceDate, c.priceDate, '公開価格が決まる日']);
+    c.sched.push(['上場', c.listing, c.listing, '株式市場で売買が始まる日']);
+    var sl = simList(c);
+    c.simAll = sl.length === PAST.length && PAST.filter(function(p){ return p.group === c.group; }).length < 5;
+    c.st = stats(sl);
+    c.sim = sl.slice().sort(function(a,b){ return a.date < b.date ? 1 : -1; }).slice(0, 4);
+    c.lead = c.uw.lead;
+    c.aiG = aiGrade(c.st);
+    c.aiRank = RANK[c.aiG];
+  });
+
+  /* ---------- illustrations (original SVG) ---------- */
+  function star4(cx, cy, r, fill){
+    return '<path d="M' + cx + ' ' + (cy - r) + 'Q' + cx + ' ' + cy + ' ' + (cx + r) + ' ' + cy + 'Q' + cx + ' ' + cy + ' ' + cx + ' ' + (cy + r) + 'Q' + cx + ' ' + cy + ' ' + (cx - r) + ' ' + cy + 'Q' + cx + ' ' + cy + ' ' + cx + ' ' + (cy - r) + 'Z" fill="' + fill + '"/>';
+  }
+  function sectorArt(group){
+    var bg = '<circle cx="48" cy="48" r="46" fill="var(--accent-soft)"/>', b = '';
+    if(group === 'food'){
+      b = '<path d="M40 26c-4 4 4 7 0 12M52 24c-4 4 4 7 0 12M64 26c-4 4 4 7 0 12" fill="none" stroke="var(--ink3)" stroke-width="2.4" stroke-linecap="round"/>' +
+        '<path d="M26 50Q28 38 48 38Q68 38 70 50Z" fill="var(--surface)" stroke="var(--ink2)" stroke-width="2"/>' +
+        '<circle cx="40" cy="45" r="2" fill="var(--gC)"/><circle cx="52" cy="43" r="2" fill="var(--gA)"/><circle cx="58" cy="47" r="2" fill="var(--gC)"/>' +
+        '<path d="M20 50H76Q76 76 48 76Q20 76 20 50Z" fill="var(--neg)"/>' +
+        '<path d="M30 58H66" stroke="var(--surface)" stroke-width="2.4" stroke-linecap="round" opacity=".7"/>' +
+        '<path d="M66 18L52 44M72 20L58 45" stroke="var(--ink2)" stroke-width="2.6" stroke-linecap="round"/>';
+    } else if(group === 'deeptech'){
+      b = '<rect x="18" y="32" width="52" height="36" rx="8" fill="var(--surface)" stroke="var(--ink2)" stroke-width="2.4"/>' +
+        '<rect x="70" y="43" width="7" height="14" rx="2.5" fill="var(--ink2)"/>' +
+        '<rect x="24" y="38" width="10" height="24" rx="3" fill="var(--gA)"/><rect x="37" y="38" width="10" height="24" rx="3" fill="var(--gA)" opacity=".55"/><rect x="50" y="38" width="10" height="24" rx="3" fill="var(--gA)" opacity=".25"/>' +
+        '<polygon points="52,16 36,48 46,48 40,76 64,40 53,40 60,16" fill="var(--star)" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>';
+    } else {
+      b = '<path d="M62 24a9 9 0 0 1 8-2 11 11 0 0 1 14 9 8 8 0 0 1-4 15H58a9 9 0 0 1 4-22z" fill="var(--surface)" stroke="var(--ink3)" stroke-width="2"/>' +
+        '<rect x="14" y="30" width="54" height="42" rx="7" fill="var(--surface)" stroke="var(--ink2)" stroke-width="2.4"/>' +
+        '<path d="M14 40H68" stroke="var(--ink2)" stroke-width="2.4"/><circle cx="21" cy="35" r="1.8" fill="var(--neg)"/><circle cx="27" cy="35" r="1.8" fill="var(--star)"/><circle cx="33" cy="35" r="1.8" fill="var(--gA)"/>' +
+        '<rect x="22" y="56" width="8" height="10" rx="2" fill="var(--accent)" opacity=".5"/><rect x="35" y="50" width="8" height="16" rx="2" fill="var(--accent)" opacity=".75"/><rect x="48" y="45" width="8" height="21" rx="2" fill="var(--accent)"/>' +
+        '<path d="M22 54L36 47L46 50L60 38" fill="none" stroke="var(--gA)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>';
+    }
+    return '<svg viewBox="0 0 96 96" aria-hidden="true">' + bg + b + '</svg>';
+  }
+  function sceneArt(){
+    var coins = '';
+    for(var i = 3; i >= 0; i--){
+      var cy = 196 - i * 17;
+      coins += '<ellipse cx="290" cy="' + (cy + 6) + '" rx="52" ry="15" fill="var(--neg)"/><ellipse cx="290" cy="' + cy + '" rx="52" ry="15" fill="var(--star)" stroke="var(--ink)" stroke-width="2"/>';
+    }
+    return '<svg viewBox="0 0 380 230" aria-hidden="true">' +
+      '<circle cx="200" cy="124" r="98" fill="var(--surface)" opacity=".55"/>' +
+      '<g transform="rotate(-4 105 120)"><rect x="30" y="38" width="150" height="156" rx="16" fill="var(--surface)" stroke="var(--line2)" stroke-width="2"/>' +
+      '<path d="M30 54a16 16 0 0 1 16-16h118a16 16 0 0 1 16 16v22H30z" fill="var(--accent)"/>' +
+      '<rect x="62" y="26" width="9" height="24" rx="4.5" fill="var(--ink2)"/><rect x="139" y="26" width="9" height="24" rx="4.5" fill="var(--ink2)"/>' +
+      '<text x="105" y="64" text-anchor="middle" font-size="15" font-weight="700" fill="var(--surface)" font-family="Zen Kaku Gothic New,sans-serif">上場日</text>' +
+      '<text x="105" y="140" text-anchor="middle" font-size="58" font-weight="900" fill="var(--ink)" font-family="IBM Plex Mono,monospace">18</text>' +
+      '<rect x="50" y="154" width="110" height="7" rx="3.5" fill="var(--line2)"/><rect x="50" y="170" width="70" height="7" rx="3.5" fill="var(--line2)"/></g>' +
+      coins +
+      '<text x="290" y="' + (196 - 3 * 17 + 6) + '" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)" font-family="Zen Kaku Gothic New,sans-serif">¥</text>' +
+      '<rect x="222" y="30" width="136" height="62" rx="12" fill="var(--surface)" stroke="var(--line2)" stroke-width="2"/>' +
+      '<circle cx="244" cy="50" r="8" fill="var(--gA)"/><path d="M240 50l3 3 6-6" fill="none" stroke="var(--surface)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<rect x="260" y="46" width="76" height="8" rx="4" fill="var(--line2)"/>' +
+      '<circle cx="244" cy="74" r="8" fill="var(--gA)"/><path d="M240 74l3 3 6-6" fill="none" stroke="var(--surface)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<rect x="260" y="70" width="52" height="8" rx="4" fill="var(--line2)"/>' +
+      star4(196, 52, 7, 'var(--star)') + star4(360, 120, 5, 'var(--gB)') +
+      '</svg>';
+  }
+  var ICONS = {
+    ai:'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.5l1.9 5.6 5.6 1.9-5.6 1.9L10 16.5l-1.9-5.6-5.6-1.9 5.6-1.9z" fill="currentColor"/></svg>',
+    look:'<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M13 13l5 5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>',
+    cal:'<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="4" width="15" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M2.5 8.5h15M6.5 2v4M13.5 2v4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>'
+  };
+
+  /* ---------- sample data meta & shared helpers ---------- */
+  var DATA_DATE = D.updated;
+  function srcLine(extra){
+    return '<p class="src">出典: JPX(日本取引所グループ)の公表資料、ipokiso.com、kabusyo.com、kabu.bridge-salon.jp、松井証券のIPOページ ・ 更新日: ' + dateJa(DATA_DATE) + (extra ? ' ・ ' + extra : '') + '</p>';
+  }
+  function sampleBadge(){ return '<span class="badge-s">実データ・要確認</span>'; }
+  function partHead(n, title, sub){
+    return '<div class="phead"><span class="pn" aria-hidden="true">' + n + '</span><h2>' + title + '</h2>' + (sub ? '<small>' + sub + '</small>' : '') + '</div>';
+  }
+  var DL_LABEL = {'ブックビルディング':'ブックビルディングの締切','公開価格の決定':'公開価格の決定日','上場':'上場日'};
+  function dayText(d){ return d > 0 ? 'あと' + d + '日' : (d === 0 ? '本日' : '終了'); }
+  function nextDeadline(c){
+    var t0 = today0(), i, ev = c.sched;
+    for(i = 0; i < ev.length; i++){ if(parse(ev[i][2]) >= t0) break; }
+    if(i === ev.length) return {name:'上場', start:c.listing, end:c.listing, days:daysTo(c.listing), started:false};
+    return {name:ev[i][0], start:ev[i][1], end:ev[i][2], days:daysTo(ev[i][2]), started:parse(ev[i][1]) <= t0};
+  }
+  function dlSub(n){
+    var multi = n.start !== n.end;
+    return dayText(n.days) + (multi ? '(' + (n.started ? '受付中' : '受付は' + md(n.start) + 'から') + ')' : '');
+  }
+  function uwShort(c){
+    return c.uw.lead + '<small>(主幹事)' + (c.uw.others.length ? 'ほか' + c.uw.others.length + '社' : '') + '</small>';
+  }
+
+  /* 専門用語は、その画面で最初に出る本文の箇所に、短い説明を付ける */
+  var TERMS = {
+    'ブックビルディング':'投資家が希望の価格や株数を申告する期間',
+    '仮条件':'公開価格を決めるための値段の範囲',
+    '公開価格':'IPOで株を買うときの値段',
+    '初値':'上場初日に最初についた株価',
+    '公募':'会社が新しく株を発行してお金を集めること',
+    '売出し':'すでにいる株主が持ち株を売ること',
+    '吸収金額':'公募と売出しで市場に出る株の合計金額',
+    'オーバーアロットメント':'人気が高いときに追加で売る株',
+    'ロックアップ':'大株主が一定期間、株を売らない約束',
+    '主幹事':'上場の手続きを中心になって進める証券会社',
+    '時価総額':'株価×発行済株式数で出す、会社全体の値段',
+    'PER':'株価が利益の何倍かを見る目安',
+    'PSR':'株価が売上の何倍かを見る目安',
+    '営業利益':'本業で稼いだ利益',
+    'サブスクリプション':'毎月・毎年の利用料をもらう仕組み'
+  };
+  var TERM_NOT_FOLLOWED = {'初値':'売'};
+  var TERM_KEYS = Object.keys(TERMS);
+  var TERM_SKIP = '.brand,.hero-tag,.stage h1,.profit,.kds,svg,button,th,dt,h1,h2,h3,h4,summary,a.back,.chip,.gb,.dpill,.tip,.noterm,.term,.step,.kpi,.stat,.sched-top,.badge-s,.sb-tag,.tag,.facts,.ck b,.alloc-row,.ec b,.ratings,.cal,.pn,.sn,.st,.lv,script,style';
+  function annotate(){
+    var seen = {}, nodes = [], w = document.createTreeWalker(app, NodeFilter.SHOW_TEXT, null);
+    while(w.nextNode()) nodes.push(w.currentNode);
+    nodes.forEach(function(n){
+      var el = n.parentElement;
+      if(!el || el.closest(TERM_SKIP)) return;
+      var text = n.nodeValue, pos = 0, frag = null;
+      while(true){
+        var best = null, bi = -1;
+        TERM_KEYS.forEach(function(k){
+          if(seen[k]) return;
+          var from = pos, i;
+          while((i = text.indexOf(k, from)) >= 0){
+            var nf = TERM_NOT_FOLLOWED[k];
+            if(nf && text.charAt(i + k.length) === nf){ from = i + k.length; continue; }
+            break;
+          }
+          if(i >= 0 && (bi < 0 || i < bi || (i === bi && k.length > best.length))){ best = k; bi = i; }
+        });
+        if(!best) break;
+        if(!frag) frag = document.createDocumentFragment();
+        frag.appendChild(document.createTextNode(text.slice(pos, bi)));
+        var span = document.createElement('span');
+        span.className = 'term';
+        span.innerHTML = '<span class="tw">' + best + '</span><span class="tdesc">(' + TERMS[best] + ')</span>';
+        frag.appendChild(span);
+        seen[best] = true;
+        pos = bi + best.length;
+      }
+      if(frag){ frag.appendChild(document.createTextNode(text.slice(pos))); n.parentNode.replaceChild(frag, n); }
+    });
+  }
+
+  /* ---------- parts ---------- */
+  function profitOf(c){ return Math.round(c.base * 100 * c.st.avg / 100); }
+  function ratings(c){
+    var pf = profitOf(c);
+    return '<span class="ratings" role="group" aria-label="参考判定 ' + c.aiG + '、儲かる金額の予想 ' + yen(pf) + '">' +
+      '<span class="rtg g-' + c.aiG + '"><small>初値の参考判定</small><b>' + c.aiG + '</b></span>' +
+      '<span class="rtg pf ' + cls(pf) + '"><small>儲かる金額の予想(100株)</small><b class="num">' + yen(pf) + '</b></span></span>';
+  }
+  function basisNote(c){ return c.baseLabel + ' ' + fmt(c.base, c.base % 1 ? 1 : 0) + '円で計算'; }
+  function simBasis(c){
+    var s = c.st;
+    return c.simAll ? '2026年に上場した過去のIPO ' + s.n + '件(' + c.mkt + 'の件数が少ないため、すべての市場で計算)' : '2026年に上場した' + c.mkt + 'の過去のIPO ' + s.n + '件';
+  }
+  function profitBlock(c){
+    var s = c.st, buy = c.base * 100, pf = profitOf(c);
+    return '<div class="profit ' + cls(pf) + '"><div class="pf-main"><span class="pf-l">儲かる金額の予想 <small>100株を買い、初値で売った場合(' + basisNote(c) + ')</small></span>' +
+      '<span class="pf-v num">' + yen(pf) + '</span></div>' +
+      '<div class="pf-sub"><span>平均 ' + pct(s.avg, 1) + '</span><span>過去' + s.n + '件中 ' + s.win + '件がプラス</span><span>幅 ' + yen(buy * s.min / 100) + ' 〜 ' + yen(buy * s.max / 100) + '</span></div>' +
+      '<p class="pf-n">' + simBasis(c) + 'の、初値売りの平均から計算した参考値です。簡易な計算で、将来の儲けを約束するものではなく、損になる場合もあります。</p></div>';
+  }
+  function shortName(c){ return c.name.replace('株式会社','').slice(0, 3); }
+  function keyDates(c){
+    var bb = c.bb;
+    function tile(l, d, k){
+      var n = daysTo(d), cl = n < 0 ? ' done' : '';
+      return '<div class="kd ' + k + cl + '"><span class="kl">' + l + '</span><b class="num">' + md(d) + '</b><span class="kc">' + (n < 0 ? '終了' : (n === 0 ? '本日' : 'あと' + n + '日')) + '</span></div>';
+    }
+    return '<div class="kds"><div class="kd-h"><a href="#' + c.id + '"><b>' + c.name + '</b></a>' + sampleBadge() + '</div><div class="kd-g">' +
+      tile('申込開始日', bb[0], 'ks') + tile('申込期限', bb[1], 'ke') + tile('上場日', c.listing, 'kl2') + '</div></div>';
+  }
+  function gchip(g, sm){ return '<span class="chip' + (sm ? ' sm' : '') + ' g-' + g + '">' + g + '</span>'; }
+  function cdText(c){
+    var d = daysTo(c.listing);
+    return d > 0 ? 'あと' + d + '日' : (d === 0 ? '本日上場' : '上場済み');
+  }
+  function barRow(v){ // -25..+100
+    var z = 20, w = Math.min(100, Math.abs(v) / 125 * 100);
+    var b = v >= 0 ? '<span class="b p" style="left:' + z + '%;width:' + Math.min(w, 80) + '%"></span>' : '<span class="b n" style="left:' + (z - Math.min(w, 20)) + '%;width:' + Math.min(w, 20) + '%"></span>';
+    return '<div class="bw" role="img" aria-label="初値売りの騰落率 ' + pct(v) + '"><span class="z"></span>' + b + '</div>';
+  }
+
+  /* ---------- list ---------- */
+  var sortKey = 'deadline';
+  function dots(list){
+    var h = '<div class="dots" role="img" aria-label="過去のIPOの初値の結果">';
+    list.forEach(function(p){ h += '<i class="' + (p.ret > 0 ? 'u' : 'x') + '">' + (p.ret > 0 ? '↑' : '↓') + '</i>'; });
+    return h + '</div>';
+  }
+  function legendHtml(){
+    var h = '<div class="legend4" aria-label="参考判定の見方">';
+    ['A','B','C','D'].forEach(function(g){
+      h += '<div class="lg"><span class="chip g-' + g + '">' + g + '</span><span><b>' + AIV[g][0] + '</b><small>' + AIV[g][1] + '</small></span></div>';
+    });
+    return h + '</div>';
+  }
+  function renderList(){
+    var list = COMPANIES.slice();
+    if(sortKey === 'ref') list.sort(function(a,b){ return b.aiRank - a.aiRank || b.st.avg - a.st.avg; });
+    else if(sortKey === 'listing') list.sort(function(a,b){ return a.listing < b.listing ? -1 : 1; });
+    else list.sort(function(a,b){ var x = nextDeadline(a), y = nextDeadline(b); return x.end < y.end ? -1 : (x.end > y.end ? 1 : (a.listing < b.listing ? -1 : 1)); });
+
+    var h = '';
+    h += '<div class="toolbar" role="group" aria-label="並べ替え"><span class="lbl">並べ替え</span>';
+    [['deadline','次の締切が近い順'],['listing','上場日順'],['ref','過去データの傾向順']].forEach(function(k){
+      h += '<button type="button" class="seg" data-sort="' + k[0] + '" aria-pressed="' + (sortKey === k[0]) + '">' + k[1] + '</button>';
+    });
+    h += '</div><div class="rows">';
+    list.forEach(function(c){
+      var n = nextDeadline(c), a = AIV[c.aiG];
+      var nd = n.days < 0 ? '終了' : dlSub(n);
+      h += '<a class="row" href="#' + c.id + '">' +
+        '<div class="rh"><span class="sa">' + sectorArt(c.art) + '</span><div class="rn"><h2>' + c.name + sampleBadge() + '</h2><p class="sector">' + c.code + ' ・ ' + c.mkt + ' ・ ' + c.sector + '</p></div>' + ratings(c) + '</div>' +
+        '<dl class="facts">' +
+          '<div class="f main"><dt>次の締切</dt><dd><span class="num">' + md(n.end) + '</span><small>' + DL_LABEL[n.name] + '</small><small>' + nd + '</small></dd></div>' +
+          '<div class="f"><dt>' + c.baseLabel + '</dt><dd class="num">' + fmt(c.base, c.base % 1 ? 1 : 0) + '円</dd></div>' +
+          '<div class="f"><dt>100株の資金目安</dt><dd class="num">' + fmt(c.base * 100) + '円</dd></div>' +
+          '<div class="f"><dt>申込先</dt><dd>' + uwShort(c) + '</dd></div>' +
+          '<div class="f"><dt>上場予定日</dt><dd class="num">' + md(c.listing) + '</dd></div>' +
+        '</dl>' +
+        '<p class="refline">' + gchip(c.aiG, true) + '<span>過去データの参考: ' + simBasis(c) + 'の初値は、平均' + pct(c.st.avg, 1) + '(' + c.st.n + '件中' + c.st.win + '件が上昇)で、「' + a[0] + '」です。<small>参考情報であり、将来の値上がりを約束するものではありません。</small></span></p>' +
+        '<span class="go">詳しく見る →</span></a>';
+    });
+    h += '</div>';
+    h += '<a class="entry" href="#guide"><span><b>初心者の方へ！</b><span class="t">IPOとは何か、日程の見方、必要資金と申込先の確認方法を、順番に説明します。</span></span><span class="go">見てみる →</span></a>';
+    h += '<details class="legend-box"><summary>参考判定(A〜D)の見方</summary><p class="muted" style="margin:6px 0 12px">2026年に上場した過去のIPOのうち、同じ市場のものの初値の結果から、傾向をまとめたものです。値上がりや値下がりを約束するものではありません。</p>' + legendHtml() + '</details>';
+    h += srcLine();
+    app.innerHTML = h;
+  }
+
+  /* ---------- detail ---------- */
+  function schedule(c){
+    var t0 = today0(), n = nextDeadline(c), nextIdx = -1;
+    c.sched.forEach(function(s, i){ if(nextIdx < 0 && parse(s[2]) >= t0) nextIdx = i; });
+    var big;
+    if(n.name === '上場') big = n.days > 0 ? '上場まであと' + n.days + '日' : (n.days === 0 ? '本日上場です' : '上場済みです');
+    else big = n.days > 0 ? DL_LABEL[n.name] + 'まであと' + n.days + '日' : (n.days === 0 ? DL_LABEL[n.name] + 'は本日です' : '受付は終了しています');
+    var h = '<div class="panel sched"><div class="sched-top"><span class="big">' + big + '</span>' +
+      '<span class="sub">上場予定日 ' + dateJa(c.listing) + ' ・ ' + c.mkt + '市場</span></div><ol class="steps">';
+    c.sched.forEach(function(s, i){
+      var st = parse(s[2]) < t0 ? 'done' : (parse(s[1]) <= t0 ? 'now' : (i === nextIdx ? 'next' : ''));
+      var last = i === c.sched.length - 1 ? ' last' : '';
+      var range = s[1] === s[2] ? md(s[1]) : md(s[1]) + '〜' + md(s[2]);
+      var tag = st === 'done' ? '終了' : (st === 'now' ? '今ここ' : (i === nextIdx ? 'つぎ' : ''));
+      var nm = s[0] === 'ブックビルディング' && c.bbNote ? s[0] + '(' + c.bbNote + ')' : s[0];
+      h += '<li class="step ' + st + last + '"><div class="k"><span>' + nm + '</span><span class="tag">' + tag + '</span></div><div class="d num">' + range + '</div><div class="e">' + s[3] + '</div></li>';
+    });
+    h += '</ol><p class="muted" style="margin-top:10px">' + (c.priceDate ? '' : '公開価格の決定日は、このサイトではまだ確認できていません(未確認)。') + '当選後の購入申込の期間も、申込先の証券会社の案内で確認してください。</p></div>';
+    return h;
+  }
+  function priceText(c){
+    if(c.price) return '公開価格 ' + fmt(c.price) + '円(仮条件 ' + fmt(c.lo) + '〜' + fmt(c.hi) + '円)';
+    if(c.hi) return '仮条件 ' + fmt(c.lo) + '〜' + fmt(c.hi) + '円(公開価格は未決定または未確認)';
+    return '想定価格 ' + fmt(c.assumed, 1) + '円(仮条件はまだ発表されていません)';
+  }
+  function fundCards(c){
+    var u = c.uw, buy = c.base * 100;
+    var others = u.others.length ? u.others.map(function(o){ return o[0] + '(' + o[1] + ')'; }).join('、') : '確認できていません(未確認)';
+    return '<div class="fund2"><div class="panel"><h3 class="mini">100株の資金目安</h3><p class="big2">' + fmt(buy) + '円</p>' +
+      '<p class="muted">' + basisNote(c) + '(売買単位は100株として計算しています。未確認)。' + (c.price ? '' : '公開価格が決まると、金額が変わる場合があります。') + '</p></div>' +
+      '<div class="panel"><h3 class="mini">申込先</h3><p>主幹事: <b>' + u.lead + '</b></p><p>ほかの幹事: ' + others + '</p>' +
+      '<p class="muted">申込は、口座をお持ちの証券会社から行います。幹事の一覧は、目論見書や各社の案内で確認してください。</p></div></div>';
+  }
+  function scaleHtml(g){
+    var h = '<div class="scale" role="img" aria-label="参考判定の位置 ' + g + '">';
+    ['D','C','B','A'].forEach(function(k){ h += '<span class="' + (k === g ? 'on g-' + k : '') + '"><b>' + k + '</b>' + AIV[k][2] + '</span>'; });
+    return h + '</div>';
+  }
+  function refPanel(c){
+    var s = c.st, buy = c.base * 100, a = AIV[c.aiG];
+    var h = '<div class="sec"><h2>過去データからの参考情報 <small>' + simBasis(c) + 'の結果</small></h2><div class="panel ref">' +
+      '<div class="ref-top">' + gchip(c.aiG) + '<div><b>' + a[0] + '</b><p>' + a[1] + '</p></div></div>' + scaleHtml(c.aiG) +
+      '<div class="pred"><div><div class="pl">初値の参考値(過去の平均)</div><div class="pv ' + cls(s.avg) + '">' + pct(s.avg, 1) + '</div><div class="ps">100株で ' + yen(buy * s.avg / 100) + '(' + basisNote(c) + ')</div></div>' +
+      '<div>' + dots(c.sim) + '<div class="dn-t">過去' + s.n + '件中 ' + s.win + '件で初値が上昇<br>平均 ' + pct(s.avg, 1) + '(最小 ' + pct(s.min) + ' 〜 最大 ' + pct(s.max) + ')</div></div></div>' +
+      '<p class="note">これは過去の実績にもとづく簡易な参考情報です。会社ごとの違い(業績・人気・上場時の相場)は反映していません。将来の値上がりや値下がりを約束するものではなく、投資の助言でもありません。手数料・税金は含みません。</p>' +
+      '<details class="basis"><summary>まとめ方の基準を見る</summary><ul><li>' + AIV.A[0] + '(A): 過去の初値が平均+20%以上で、4分の3以上が上昇</li><li>' + AIV.B[0] + '(B): 平均+10%以上で、半数以上が上昇</li><li>' + AIV.C[0] + '(C): 平均0%以上で、半数以上が上昇</li><li>' + AIV.D[0] + '(D): 上のどれにも当てはまらない場合</li></ul></details></div></div>';
+    return h;
+  }
+  function checks(c){
+    var items = [], s = c.st, buy = c.base * 100, n = nextDeadline(c);
+    items.push(['申込の期限', n.days < 0 ? 'warn' : (n.days <= 3 ? 'chk' : 'ok'),
+      c.bbNote ? 'ブックビルディング(' + c.bbNote + ')は' + md(c.bb[0]) + '〜' + md(c.bb[1]) + 'です。' + (daysTo(c.bb[1]) < 0 ? '受付は終了しています。' : '') :
+      'ブックビルディングは' + md(c.bb[0]) + '〜' + md(c.bb[1]) + 'です。' + (daysTo(c.bb[1]) < 0 ? '受付は終了しています。' : 'あと' + daysTo(c.bb[1]) + '日で締切です。') + '証券会社ごとに受付の時間が違うため、申込先で確認してください。']);
+    items.push(['必要資金', 'chk', '100株で' + fmt(buy) + '円が必要です(' + basisNote(c) + ')。生活に必要なお金とは別に、余裕のある資金で考えることが大切です。']);
+    if(c.pub && c.sec){
+      var secPct = c.sec / (c.pub + c.sec) * 100;
+      items.push(['公募と売出しの割合', secPct >= 70 ? 'warn' : (secPct >= 40 ? 'chk' : 'ok'),
+        '公募' + fmt(c.pub) + '株、売出し' + fmt(c.sec) + '株で、売出しが約' + fmt(secPct) + '%です。' + (c.secNote ? '(' + c.secNote + ')' : '') + (secPct >= 70 ? '既存の株主が売る株が中心で、会社に入る資金は少なめです。' : (secPct >= 40 ? '既存の株主が売る株も、一定の割合を占めます。' : '会社が新しく発行する株が中心です。'))]);
+    } else items.push(['公募と売出しの割合', 'chk', '株数を確認できていません(未確認)。目論見書で確認してください。']);
+    items.push(['売却制限(ロックアップ)', 'chk', c.lockup ? '大株主の売却制限は、' + c.lockup + 'です。' : '売却制限の内容を確認できていません(未確認)。目論見書で確認してください。']);
+    items.push(['会社の業績', 'chk', c.fin ? c.fin.label + 'の売上高は' + fmt(c.fin.sales) + '百万円、当期純利益は' + fmt(c.fin.ni) + '百万円です。' : '売上や利益の数字を確認できていません(未確認)。目論見書で確認してください。']);
+    items.push(['過去の同じ市場のIPOの結果', s.lose >= s.n / 2 ? 'warn' : (s.lose >= s.n / 3 ? 'chk' : 'ok'),
+      simBasis(c) + 'のうち、初値が公開価格を下回ったのは' + s.lose + '件でした。']);
+    var LV = {ok:['✓ 問題は少なめ','lv-ok'], chk:['● 確認','lv-chk'], warn:['▲ 注意','lv-warn']};
+    var nw = items.filter(function(x){ return x[1] === 'warn'; }).length, nc = items.filter(function(x){ return x[1] === 'chk'; }).length;
+    var h = '<p class="check-sum">確認ポイントは' + items.length + '件です。「注意」が' + nw + '件、「確認」が' + nc + '件あります。</p><ul class="checks">';
+    items.forEach(function(x){ h += '<li class="ck ' + LV[x[1]][1] + '"><span class="lv">' + LV[x[1]][0] + '</span><div><b>' + x[0] + '</b><p>' + x[2] + '</p></div></li>'; });
+    return h + '</ul><p class="src">確認できた数字から自動で作成しています。「注意」は、確認をおすすめする項目です。</p>';
+  }
+  function simSection(c){
+    var s = c.st, buy = c.base * 100;
+    var h = '<section class="sec"><h2>過去のIPOでは、初値がどうなったか <small>' + simBasis(c) + '</small></h2><div class="panel">';
+    h += '<p class="sim-lead">公開価格で買って<b>初値</b>で売った場合の平均は <b class="' + cls(s.avg) + '">' + pct(s.avg, 1) + '</b>。' + s.n + '件中 <b>' + s.win + '件</b>でプラス、<b>' + s.lose + '件</b>でマイナスでした。</p>';
+    h += '<div class="tiles" aria-label="' + c.name + 'の100株を買い、初値で売った場合の試算">' +
+      '<div class="tile"><div class="tl">いちばん悪かった場合</div><div class="tv ' + cls(s.min) + '">' + yen(buy * s.min / 100) + '</div><div class="ts">' + pct(s.min, 1) + '</div></div>' +
+      '<div class="tile mid"><div class="tl">平均</div><div class="tv ' + cls(s.avg) + '">' + yen(buy * s.avg / 100) + '</div><div class="ts">' + pct(s.avg, 1) + '</div></div>' +
+      '<div class="tile"><div class="tl">いちばん良かった場合</div><div class="tv ' + cls(s.max) + '">' + yen(buy * s.max / 100) + '</div><div class="ts">' + pct(s.max, 1) + '</div></div></div>';
+    h += '<p class="cap" style="margin:-4px 0 12px">' + c.name + 'の' + basisNote(c) + '(購入代金 ' + fmt(buy) + '円)の100株を、過去と同じ値動きで売った場合の試算です。</p>';
+    h += '<h3 class="mini">最近の過去のIPO(4件)</h3><div class="cases">';
+    c.sim.forEach(function(p){
+      h += '<div class="case"><div><div class="nm">' + p.name + '</div><div class="sub">' + p.code + ' ・ ' + MKT[p.group] + ' ・ ' + ym(p.date) + '上場<br>主幹事 ' + p.lead + '</div></div>' +
+        '<div class="mid">' + barRow(p.ret) + '<div class="px">公開価格 ' + fmt(p.price) + '円 → 初値 ' + fmt(p.open) + '円</div></div>' +
+        '<div class="rt"><div class="pc ' + cls(p.ret) + '">' + pct(p.ret, 1) + '</div><div class="yn ' + cls(p.pl) + '">100株で ' + yen(p.pl) + '</div></div></div>';
+    });
+    h += '</div>' + srcLine('価格・初値はipokiso.comとkabusyo.comの掲載値');
+    return h + '</div></section>';
+  }
+  function unkPanel(title, body){
+    return '<div class="panel unk"><h3>' + title + ' <span class="tag">未確認</span></h3><p>' + body + '</p></div>';
+  }
+  function renderDetail(c){
+    var h = '<a class="back" href="#">← IPO企業一覧に戻る</a>';
+    h += '<section class="dhead"><div class="dhead-in"><span class="sa">' + sectorArt(c.art) + '</span><div><p style="margin-bottom:4px">' + sampleBadge() + '</p><h1>' + c.name + '</h1><p class="sector">' + c.code + ' ・ ' + c.mkt + ' ・ ' + c.sector + '</p></div>' + ratings(c) + '</div>' + profitBlock(c) +
+      '<div class="jumps" role="group" aria-label="この画面の見出し"><button type="button" class="jump" data-jump="p1">会社の説明</button><button type="button" class="jump" data-jump="p2">IPOの日程</button><button type="button" class="jump" data-jump="p3">確認ポイント</button><button type="button" class="jump" data-jump="p4">強みとリスク</button><button type="button" class="jump" data-jump="p5">数字の詳しい説明</button></div></section>';
+
+    h += '<section class="part" id="p1">' + partHead(1, '会社の説明', 'どんな会社か') +
+      '<div class="panel"><div class="about-row"><span class="k">何をする会社か</span><p>' + c.about + '</p></div>' +
+      '<div class="about-row"><span class="k">上場の概要</span><p>' + c.mkt + '市場 ・ 上場予定日 ' + dateJa(c.listing) + ' ・ ' + priceText(c) + '</p></div>' +
+      (c.founded ? '<div class="about-row"><span class="k">設立・所在地</span><p>' + c.founded + '設立 ・ ' + c.hq + '</p></div>' : '') +
+      '<div class="about-row"><span class="k">もっと詳しく</span><p class="links">' + c.links.map(function(l){ return '<a href="' + l[1] + '" target="_blank" rel="noopener noreferrer">' + l[0] + '</a>'; }).join(' ・ ') + '</p></div></div></section>';
+
+    h += '<section class="part" id="p2">' + partHead(2, 'IPOの日程', '申込から上場までの流れ') + keyDates(c) + schedule(c) + fundCards(c) + '</section>';
+
+    h += '<section class="part chart-top"><div class="sec"><h2>売上・利益の推移</h2>' +
+      (c.fin ? '<div class="panel"><p class="meta2">単位: 百万円 ・ 期間: ' + c.fin.label + '(1期分のみ)</p><dl class="kpis"><div class="kpi"><dt>売上高</dt><dd class="num">' + fmt(c.fin.sales) + '<small>百万円</small></dd></div><div class="kpi"><dt>当期純利益</dt><dd class="num">' + fmt(c.fin.ni) + '<small>百万円</small></dd></div></dl><p class="muted" style="margin-top:10px">複数年の売上・利益のグラフは、目論見書の数字を確認でき次第、追加します(未確認)。</p></div>' :
+      unkPanel('売上・利益のグラフ', '売上高・営業利益の数字を、まだ確認できていません。目論見書の数字を確認でき次第、グラフを追加します。')) + srcLine() + '</div></section>';
+
+    h += '<section class="part" id="p3">' + partHead(3, '確認ポイント', '申し込む前に見ておきたい点') + checks(c) + refPanel(c) + simSection(c) + '</section>';
+
+    h += '<section class="part" id="p4">' + partHead(4, '強みとリスク') +
+      unkPanel('強みとリスクの解説', 'この会社の強みとリスクは、目論見書の「事業等のリスク」などを確認できていないため、まだ載せていません。実在の会社について、根拠のない評価を書かないためです。確認でき次第、追加します。') + '</section>';
+
+    var tot = (c.pub || 0) + (c.sec || 0);
+    h += '<section class="part" id="p5">' + partHead(5, '数字の詳しい説明', '株数・価格・証券会社') +
+      '<div class="sec"><h2>IPOの条件</h2><div class="panel"><div class="tblwrap"><table class="tbl">' +
+      '<tr><th>市場</th><td>' + c.mkt + '</td></tr>' +
+      '<tr><th>ブックビルディング' + (c.bbNote ? '(' + c.bbNote + ')' : '') + '</th><td class="num">' + md(c.bb[0]) + '〜' + md(c.bb[1]) + '</td></tr>' +
+      '<tr><th>仮条件</th><td class="num">' + (c.lo ? fmt(c.lo) + '〜' + fmt(c.hi) + '円' : '未発表') + '</td></tr>' +
+      '<tr><th>公開価格</th><td class="num">' + (c.price ? fmt(c.price) + '円' : '未決定または未確認') + '</td></tr>' +
+      (c.assumed ? '<tr><th>想定価格</th><td class="num">' + fmt(c.assumed, 1) + '円</td></tr>' : '') +
+      '<tr><th>公募株数</th><td class="num">' + (c.pub ? fmt(c.pub) + '株' : '未確認') + '</td></tr>' +
+      '<tr><th>売出株数</th><td class="num">' + (c.sec ? fmt(c.sec) + '株' + (c.secNote ? '<small>' + c.secNote + '</small>' : '') : '未確認') + '</td></tr>' +
+      '<tr><th>オーバーアロットメント</th><td class="num">' + (c.oa ? fmt(c.oa) + '株' : '未確認(売出株数に含まれる場合があります)') + '</td></tr>' +
+      (tot && c.base ? '<tr><th>公募・売出しの合計金額(目安)</th><td class="num">約' + fmt(tot * c.base / 1e8, 1) + '億円<small>' + basisNote(c) + '。オーバーアロットメントは含みません</small></td></tr>' : '') +
+      '<tr><th>ロックアップ</th><td>' + (c.lockup || '未確認') + '</td></tr>' +
+      '</table></div>' + srcLine('株数はJPXの資料またはipokiso.comの掲載値') + '</div></div>' +
+      '<div class="sec"><h2>上場を担当する証券会社</h2><div class="panel"><div class="tblwrap"><table class="tbl"><tr><th>主幹事</th><td>' + c.uw.lead + '</td></tr>' +
+      c.uw.others.map(function(o){ return '<tr><th>' + o[1] + '</th><td>' + o[0] + '</td></tr>'; }).join('') +
+      '</table></div><p class="muted" style="margin-top:8px">ほかの幹事は、確認できた分だけを載せています(未確認の場合があります)。引受の割合は確認できていません。</p></div></div></section>';
+    app.innerHTML = h;
+  }
+
+  /* ---------- past page ---------- */
+  function renderPast(){
+    var all = stats(PAST);
+    var list = PAST.slice().sort(function(a,b){ return a.date < b.date ? 1 : (a.date > b.date ? -1 : b.ret - a.ret); });
+    var h = '<section class="pastbar"><div><p style="margin-bottom:4px">' + sampleBadge() + '</p><h1>過去のIPO実績</h1><p>2026年に上場したIPOのうち、公開価格と初値を確認できたものです。公開価格で買って、上場初日の初値で売った場合の結果を、まとめています。</p></div></section>';
+    h += '<div class="stat-tiles">' +
+      '<div class="stat"><div class="tl">掲載件数</div><div class="tv">' + all.n + '<small style="font-size:13px;color:var(--ink3)"> 件</small></div><div class="ts">2026年2月〜10月に上場</div></div>' +
+      '<div class="stat"><div class="tl">初値売りの平均</div><div class="tv ' + cls(all.avg) + '">' + pct(all.avg, 1) + '</div><div class="ts">100株で平均 ' + yen(PAST.reduce(function(a,p){ return a + p.pl; }, 0) / all.n) + '</div></div>' +
+      '<div class="stat"><div class="tl">プラスだった割合</div><div class="tv">' + fmt(all.win / all.n * 100) + '%</div><div class="ts">' + all.win + '件がプラス、' + all.lose + '件がマイナス</div></div>' +
+      '<div class="stat"><div class="tl">最大 / 最小</div><div class="tv" style="font-size:20px"><span class="up">' + pct(all.max) + '</span> / <span class="down">' + pct(all.min) + '</span></div><div class="ts">初値売りの騰落率</div></div></div>';
+    h += '<div class="two">';
+    h += '<section class="panel"><h3 style="font-size:15px;margin-bottom:10px">市場別</h3><div class="tblwrap"><table class="gtbl"><thead><tr><th>市場</th><th>件数</th><th>平均</th><th>プラス割合</th></tr></thead><tbody>';
+    ['g','s','n'].forEach(function(g){ var r = stats(PAST.filter(function(p){ return p.group === g; })); h += '<tr><td>' + MKT[g] + '</td><td class="num">' + r.n + '件</td><td class="num ' + cls(r.avg) + '">' + pct(r.avg, 1) + '</td><td class="num">' + fmt(r.win / r.n * 100) + '%</td></tr>'; });
+    h += '</tbody></table></div></section>';
+    h += '<section class="panel"><h3 style="font-size:15px;margin-bottom:10px">主幹事の証券会社別(2件以上)</h3><div class="tblwrap"><table class="gtbl"><thead><tr><th>主幹事</th><th>件数</th><th>平均</th><th>プラス割合</th></tr></thead><tbody>';
+    BROKER_NAMES.forEach(function(n){
+      var r = stats(PAST.filter(function(p){ return p.lead === n; }));
+      if(r.n >= 2) h += '<tr><td>' + n + '</td><td class="num">' + r.n + '件</td><td class="num ' + cls(r.avg) + '">' + pct(r.avg, 1) + '</td><td class="num">' + fmt(r.win / r.n * 100) + '%</td></tr>';
+    });
+    h += '</tbody></table></div></section></div>';
+
+    h += '<section class="sec"><h2>過去のIPO一覧 <small>新しい順</small></h2><div class="panel"><div class="tblwrap"><table class="ptbl"><thead><tr><th>企業</th><th class="l">主幹事</th><th>市場</th><th>公開価格</th><th>初値</th><th class="l">初値売りの騰落率</th><th>100株の損益</th></tr></thead><tbody>';
+    list.forEach(function(p){
+      h += '<tr><td><div class="nm">' + p.name + '</div><div class="sub">' + p.code + ' ・ ' + ym(p.date) + '上場</div></td><td class="l">' + p.lead + '</td><td>' + MKT[p.group] + '</td>' +
+        '<td class="num">' + fmt(p.price) + '円</td><td class="num">' + fmt(p.open) + '円</td>' +
+        '<td class="l"><div style="display:flex;align-items:center;gap:10px"><div class="bw">' + barRow(p.ret).replace(/^<div class="bw"[^>]*>|<\/div>$/g, '') + '</div><span class="num ' + cls(p.ret) + '" style="min-width:56px;text-align:right">' + pct(p.ret, 1) + '</span></div></td>' +
+        '<td class="num ' + cls(p.pl) + '">' + yen(p.pl) + '</td></tr>';
+    });
+    h += '</tbody></table></div><p class="cap">表は横にスクロールできます。名前・コード・主幹事はkabu.bridge-salon.jp、公開価格と初値はipokiso.comとkabusyo.comの掲載値を、上場日と公開価格で照合したものです。</p>' + srcLine('2026年3月10日上場のインフラファンドは除いています') + '</div></section>';
+    app.innerHTML = h;
+  }
+
+  /* ---------- charts ---------- */
+  var charts = [];
+  var uid = 0;
+  function niceScale(lo, hi){
+    lo = Math.min(lo, 0); hi = Math.max(hi, 0);
+    var range = hi - lo, step = 1, mags = [1,2,5];
+    outer: for(var p = 0; p < 6; p++){
+      for(var i = 0; i < 3; i++){
+        var s = mags[i] * Math.pow(10, p);
+        if(range / s <= 5){ step = s; break outer; }
+      }
+    }
+    var tmin = Math.floor(lo / step) * step, tmax = Math.ceil(hi / step) * step;
+    if(tmin === lo && lo < 0) tmin -= step;
+    if(tmax === hi && hi > 0) tmax += step;
+    var ticks = [];
+    for(var t = tmin; t <= tmax + 1e-9; t += step) ticks.push(t);
+    return {min:tmin, max:tmax, ticks:ticks};
+  }
+  function barPath(x, w, y0, y1, r){
+    var h = Math.abs(y1 - y0); r = Math.min(r, h, w / 2);
+    if(y1 <= y0){
+      return 'M' + x + ',' + y0 + 'V' + (y1 + r) + 'Q' + x + ',' + y1 + ' ' + (x + r) + ',' + y1 + 'H' + (x + w - r) + 'Q' + (x + w) + ',' + y1 + ' ' + (x + w) + ',' + (y1 + r) + 'V' + y0 + 'Z';
+    }
+    return 'M' + x + ',' + y0 + 'V' + (y1 - r) + 'Q' + x + ',' + y1 + ' ' + (x + r) + ',' + y1 + 'H' + (x + w - r) + 'Q' + (x + w) + ',' + y1 + ' ' + (x + w) + ',' + (y1 - r) + 'V' + y0 + 'Z';
+  }
+  function drawChart(el, values, kind){
+    var W = Math.max(el.clientWidth, 240), H = 240;
+    var ML = 38, MR = 8, MT = 22, MB = 28;
+    var pw = W - ML - MR, ph = H - MT - MB;
+    var sc = niceScale(Math.min.apply(null, values), Math.max.apply(null, values));
+    function Y(v){ return MT + (sc.max - v) / (sc.max - sc.min) * ph; }
+    var band = pw / values.length, bw = Math.min(band * 0.58, 56);
+    var id = 'hatch' + (uid++);
+    var s = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + (kind === 'rev' ? '売上高' : '営業利益') + 'の推移">' +
+      '<defs><pattern id="' + id + '" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" style="stroke:var(--surface);stroke-width:2"/></pattern></defs>';
+    sc.ticks.forEach(function(t){
+      var y = Y(t);
+      s += '<line class="' + (t === 0 ? 'zero' : 'grid') + '" x1="' + ML + '" x2="' + (W - MR) + '" y1="' + y + '" y2="' + y + '" stroke-width="1"/>';
+      s += '<text class="tick" x="' + (ML - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + sgn(t) + '</text>';
+    });
+    values.forEach(function(v, i){
+      var cx = ML + band * i + band / 2, x = cx - bw / 2, y0 = Y(0), y1 = Y(v);
+      var neg = v < 0, fc = i === FORECAST_IDX;
+      var d = Math.abs(y1 - y0) < 1 ? '' : barPath(x, bw, y0, y1, 4);
+      s += '<g class="col" tabindex="0" data-i="' + i + '" data-cx="' + cx + '" data-top="' + (neg ? y0 : y1) + '" aria-label="' + PERIODS[i] + (fc ? ' 予想' : '') + ' ' + sgn(v) + '億円">' +
+        '<rect class="hit" x="' + (cx - band / 2) + '" y="' + (MT - 18) + '" width="' + band + '" height="' + (ph + 18 + MB) + '"/>';
+      if(d){
+        s += '<path class="bar ' + (neg ? 'negv' : 'pos') + '" d="' + d + '"/>';
+        if(fc) s += '<path d="' + d + '" fill="url(#' + id + ')" style="pointer-events:none"/>';
+      }
+      s += '<text class="val" x="' + cx + '" y="' + (neg ? y1 + 14 : y1 - 6) + '" text-anchor="middle">' + sgn(v) + '</text>';
+      s += '<text class="xl" x="' + cx + '" y="' + (H - 8) + '" text-anchor="middle">' + PERIODS[i].replace('期','') + (fc ? '予' : '') + '</text></g>';
+    });
+    s += '<text class="tick" x="' + (ML - 8) + '" y="10" text-anchor="end">億円</text></svg><div class="tip" role="status"></div>';
+    el.innerHTML = s;
+    var tip = el.querySelector('.tip');
+    function show(g){
+      var i = +g.getAttribute('data-i'), v = values[i], prev = i > 0 ? values[i - 1] : null;
+      var line = '<b>' + PERIODS[i] + (i === FORECAST_IDX ? '(会社予想)' : '') + '</b><br>' + (kind === 'rev' ? '売上高 ' : '営業利益 ') + sgn(v) + '億円';
+      if(kind === 'rev' && prev) line += '<br>前期比 ' + pct((v / prev - 1) * 100);
+      if(kind === 'op' && prev != null) line += '<br>前期差 ' + (v - prev >= 0 ? '+' : '−') + fmt(Math.abs(v - prev)) + '億円';
+      tip.innerHTML = line;
+      var cx = +g.getAttribute('data-cx'), top = +g.getAttribute('data-top'), half = tip.offsetWidth / 2;
+      tip.style.left = Math.min(Math.max(cx, half + 2), W - half - 2) + 'px';
+      tip.style.top = Math.max(top - 22, tip.offsetHeight + 2) + 'px';
+      tip.classList.add('on');
+    }
+    function hide(){ tip.classList.remove('on'); }
+    el.querySelectorAll('.col').forEach(function(g){
+      g.addEventListener('mouseenter', function(){ show(g); });
+      g.addEventListener('mouseleave', hide);
+      g.addEventListener('focus', function(){ show(g); });
+      g.addEventListener('blur', hide);
+      g.addEventListener('click', function(){ show(g); });
+    });
+  }
+  function drawAll(c){
+    charts = [
+      {el: document.getElementById('ch-rev'), values: c.revenue, kind: 'rev', w: 0},
+      {el: document.getElementById('ch-op'), values: c.op, kind: 'op', w: 0}
+    ];
+    paintCharts();
+  }
+  function paintCharts(){
+    charts.forEach(function(ch){
+      if(!ch.el || !ch.el.isConnected) return;
+      var w = ch.el.clientWidth;
+      if(w && w !== ch.w){ ch.w = w; drawChart(ch.el, ch.values, ch.kind); }
+    });
+  }
+  window.addEventListener('resize', paintCharts);
+
+  /* ---------- guide page ---------- */
+  function renderGuide(){
+    var h = '<section class="pg"><p style="margin-bottom:4px">' + sampleBadge() + '</p><h1>IPOが初めての方へ</h1><p>次の順番で見ると、全体がつかめます。このサイトの情報は、申込の前に必ず公式の情報で確認してください。</p>' +
+      '<ol class="guide-steps">' +
+      '<li class="gs"><span class="sn" aria-hidden="true">1</span><div><h2>IPOとは</h2><ul class="points noterm">' +
+        '<li>IPOは、会社の株がはじめて証券取引所で売買できるようになることです。「新規公開株」とも呼びます。</li>' +
+        '<li>上場する前に、証券会社へ申し込みます。多くの場合は抽選で、当たると「公開価格」で株を買えます。</li>' +
+        '<li>上場した日に最初についた株価を「初値」と呼びます。公開価格より高ければ差額が利益、低ければ損失です。</li>' +
+        '<li>初値が公開価格を下回ることもあります。必ず利益が出るわけではありません。</li>' +
+        '<li>申込を受け付ける期間を「ブックビルディング」、上場の手続きを中心になって進める証券会社を「主幹事」と呼びます。</li></ul></div></li>' +
+      '<li class="gs"><span class="sn" aria-hidden="true">2</span><div><h2>申込日程を見る</h2><p>申込を受け付ける期間、値段が決まる日、上場日を、各社の分を、カレンダーで確認できます。申込の締切に間に合うかを、先に見ておきましょう。</p><a class="btn" href="#schedule">申込日程を見る →</a></div></li>' +
+      '<li class="gs"><span class="sn" aria-hidden="true">3</span><div><h2>必要資金と申込先を確認する</h2><p class="noterm">100株を買うために必要な金額と、申し込める証券会社(主幹事・幹事)を確認できます。口座をお持ちの証券会社が入っているかを見ておきましょう。</p><a class="btn" href="#funds">必要資金と申込先を見る →</a></div></li>' +
+      '</ol><p style="margin-top:20px">確認が済んだら、上場予定の一覧から、気になる企業の詳細を見てみましょう。</p><a class="btn ghost" href="#">上場予定の一覧を見る →</a></section>';
+    app.innerHTML = h;
+  }
+
+  /* ---------- schedule page ---------- */
+  var CAL = {month:null, sel:null, co:null};
+  var EVK = {'ブックビルディング':['bb','申込'], '公開価格の決定':['pr','価格決定'], '上場':['ls','上場']};
+  function allEvents(){
+    var ev = [];
+    COMPANIES.forEach(function(c){ c.sched.forEach(function(x){ ev.push({c:c, name:x[0], start:x[1], end:x[2], desc:x[3]}); }); });
+    ev.sort(function(a,b){ return a.start < b.start ? -1 : (a.start > b.start ? 1 : (a.end < b.end ? -1 : 1)); });
+    return ev;
+  }
+  function p2(n){ return (n < 10 ? '0' : '') + n; }
+  function iso(y, m, d){ return y + '-' + p2(m) + '-' + p2(d); }
+  function evOn(ev, d){ return ev.filter(function(e){ return e.start <= d && d <= e.end; }); }
+  function evLine(e, t0){
+    var done = parse(e.end) < t0, now = !done && parse(e.start) <= t0;
+    var range = e.start === e.end ? md(e.start) : md(e.start) + '〜' + md(e.end);
+    var st = done ? '終了' : (now ? '期間中' : dayText(daysTo(e.start)) + 'で開始');
+    if(e.start === e.end && !done) st = dayText(daysTo(e.end));
+    return '<li class="ev' + (done ? ' done' : '') + ' k-' + EVK[e.name][0] + '"><span class="d">' + range + '</span>' +
+      '<div class="ec"><b>' + e.name + '</b><a href="#' + e.c.id + '">' + e.c.name + '</a><p>' + e.desc + '</p></div><span class="est">' + st + '</span></li>';
+  }
+  function renderSchedule(){
+    var ev = allEvents(), t0 = today0(), todayIso = iso(t0.getFullYear(), t0.getMonth() + 1, t0.getDate());
+    var first = ev[0].start.slice(0, 7), last = ev[ev.length - 1].end.slice(0, 7);
+    if(!CAL.co) CAL.co = COMPANIES.slice().sort(function(a,b){ var x = nextDeadline(a), y = nextDeadline(b); return x.end < y.end ? -1 : (x.end > y.end ? 1 : 0); })[0].id;
+    var allEv = ev;
+    if(CAL.co !== 'all') ev = ev.filter(function(e){ return e.c.id === CAL.co; });
+    if(!CAL.month){
+      var up = ev.filter(function(e){ return e.end >= todayIso; })[0] || ev[0];
+      CAL.month = up.start.slice(0, 7); CAL.sel = up.start;
+    }
+    var y = +CAL.month.slice(0, 4), m = +CAL.month.slice(5, 7);
+    var firstWd = new Date(y, m - 1, 1).getDay(), days = new Date(y, m, 0).getDate();
+    var mStart = iso(y, m, 1), mEnd = iso(y, m, days);
+    if(!CAL.sel || CAL.sel < mStart || CAL.sel > mEnd) CAL.sel = null;
+    var h = '<section class="pg"><p style="margin-bottom:4px">' + sampleBadge() + '</p><h1>IPOの日程カレンダー</h1><p>企業ごとに、申込開始日・申込期限・上場日を確認できます。日付を押すと、その日の予定を下に表示します。</p>' +
+      '<p class="muted" style="margin-top:8px">受付時間や手続きは、証券会社ごとに異なる場合があります。実際の申込は、申込先の案内で確認してください。</p>';
+    h += '<div class="co-tabs" role="group" aria-label="企業を選ぶ"><button type="button" class="seg" data-co="all" aria-pressed="' + (CAL.co === 'all') + '">すべての企業</button>';
+    COMPANIES.forEach(function(c){ h += '<button type="button" class="seg" data-co="' + c.id + '" aria-pressed="' + (CAL.co === c.id) + '">' + c.name.replace('株式会社','') + '</button>'; });
+    h += '</div>';
+    COMPANIES.forEach(function(c){ if(CAL.co === 'all' || CAL.co === c.id) h += keyDates(c); });
+    h += '<div class="cal"><div class="cal-h"><button type="button" class="calnav" data-cal="prev"' + (CAL.month <= first ? ' disabled' : '') + ' aria-label="前の月">← 前の月</button>' +
+      '<h2 class="cal-t">' + y + '年' + m + '月</h2><button type="button" class="calnav" data-cal="next"' + (CAL.month >= last ? ' disabled' : '') + ' aria-label="次の月">次の月 →</button></div>';
+    h += '<div class="cal-key" aria-label="色の見方">';
+    Object.keys(EVK).forEach(function(k){ h += '<span><i class="dot k-' + EVK[k][0] + '"></i>' + k + '</span>'; });
+    h += '</div><div class="cal-grid" role="grid" aria-label="' + y + '年' + m + '月のカレンダー">';
+    ['日','月','火','水','木','金','土'].forEach(function(w, i){ h += '<div class="cal-w' + (i === 0 ? ' sun' : (i === 6 ? ' sat' : '')) + '" role="columnheader">' + w + '</div>'; });
+    var i, d;
+    for(i = 0; i < firstWd; i++) h += '<div class="cal-c blank" role="gridcell"></div>';
+    for(d = 1; d <= days; d++){
+      var ds = iso(y, m, d), es = evOn(ev, ds), wdn = (firstWd + d - 1) % 7;
+      var cls = 'cal-c' + (wdn === 0 ? ' sun' : (wdn === 6 ? ' sat' : '')) + (ds === todayIso ? ' today' : '') + (ds === CAL.sel ? ' sel' : '') + (es.length ? ' has' : '');
+      var inner = '<span class="n">' + d + '</span>';
+      if(es.length){
+        inner += '<span class="mk">';
+        es.forEach(function(e){
+          var lb = EVK[e.name][1];
+          if(e.name === 'ブックビルディング') lb = ds === e.start ? '申込開始' : (ds === e.end ? '申込期限' : '申込中');
+          if(CAL.co === 'all') lb = shortName(e.c) + ' ' + lb;
+          inner += '<span class="pill k-' + EVK[e.name][0] + (e.name === 'ブックビルディング' && (ds === e.start || ds === e.end) ? ' edge' : '') + '"><i class="dot k-' + EVK[e.name][0] + '"></i><span class="pl">' + lb + '</span></span>'; });
+        inner += '</span>';
+        h += '<button type="button" role="gridcell" class="' + cls + '" data-day="' + ds + '" aria-pressed="' + (ds === CAL.sel) + '" aria-label="' + m + '月' + d + '日 予定' + es.length + '件">' + inner + '</button>';
+      } else {
+        h += '<div class="' + cls + '" role="gridcell">' + inner + '</div>';
+      }
+    }
+    h += '</div>';
+    var selEv = CAL.sel ? evOn(ev, CAL.sel) : [];
+    h += '<div class="cal-sel" aria-live="polite">';
+    if(CAL.sel){
+      h += '<h3>' + dateJa(CAL.sel) + 'の予定</h3><ol class="evlist">';
+      selEv.forEach(function(e){ h += evLine(e, t0); });
+      h += '</ol>';
+    } else h += '<p class="muted">予定のある日(色のついた日)を押すと、内容を表示します。</p>';
+    h += '</div></div>';
+    var mev = ev.filter(function(e){ return e.start <= mEnd && e.end >= mStart; });
+    h += '<h2 class="mini" style="margin-top:22px;font-size:17px">' + m + '月の予定一覧</h2><ol class="evlist">';
+    if(mev.length) mev.forEach(function(e){ h += evLine(e, t0); }); else h += '<li class="ev"><div class="ec"><p>この月の予定はありません。</p></div></li>';
+    h += '</ol>' + srcLine('日程は架空です') + '</section>';
+    app.innerHTML = h;
+  }
+
+  /* ---------- funds page ---------- */
+  function renderFunds(){
+    var h = '<section class="pg"><p style="margin-bottom:4px">' + sampleBadge() + '</p><h1>必要資金と申込先</h1><p>IPOに申し込む前に、いくら必要か、どの証券会社から申し込めるかを確認できます。</p>' +
+      '<div class="panel"><h3 class="mini">知っておきたい3つのこと</h3><ul class="points noterm">' +
+      '<li><b>必要資金:</b> 購入には「公開価格 × 株数」の金額が必要です。多くのIPOは100株から買えるため、このサイトでは100株で計算しています(売買単位は未確認です)。</li>' +
+      '<li><b>公開価格は後から決まります:</b> 申込の時点では、値段は仮条件(範囲)です。公開価格が決まる日を過ぎると、金額が確定します。</li>' +
+      '<li><b>申込先:</b> 申込は、口座をお持ちの証券会社から行います。その会社が、主幹事(上場の手続きを中心になって進める証券会社)または幹事として名前を連ねているかを確認します。口座がない場合は、先に口座の開設が必要です。</li></ul></div>';
+    COMPANIES.slice().sort(function(a,b){ var x = nextDeadline(a), y = nextDeadline(b); return x.end < y.end ? -1 : (x.end > y.end ? 1 : (a.listing < b.listing ? -1 : 1)); }).forEach(function(c){
+      var n = nextDeadline(c), u = c.uw;
+      h += '<section class="panel fcard"><div class="fc-h">' + sampleBadge() + '<h3>' + c.name + '</h3><a href="#' + c.id + '">企業の詳細を見る</a></div>' +
+        '<dl class="facts f3"><div class="f main"><dt>100株の資金目安</dt><dd class="num">' + fmt(c.base * 100) + '円<small>' + basisNote(c) + '</small></dd></div>' +
+        '<div class="f"><dt>公開価格の決定日</dt><dd class="num">' + (c.priceDate ? md(c.priceDate) : '未確認') + '</dd></div>' +
+        '<div class="f"><dt>次の締切</dt><dd><span class="num">' + md(n.end) + '</span><small>' + DL_LABEL[n.name] + '</small><small>' + (n.days < 0 ? '終了' : dlSub(n)) + '</small></dd></div></dl>' +
+        '<h4 class="mini" style="margin-top:16px">申込先(主幹事と幹事)</h4><div class="alloc">' +
+        '<div class="alloc-row lead"><div class="nm">' + u.lead + '<small>主幹事</small></div></div>';
+      u.others.forEach(function(o){
+        h += '<div class="alloc-row"><div class="nm">' + o[0] + '<small>' + o[1] + '</small></div></div>';
+      });
+      h += '</div><p class="muted" style="margin-top:10px">確認できた幹事だけを載せています。ほかの幹事は、目論見書や各社の案内で確認してください。</p></section>';
+    });
+    h += srcLine() + '</section>';
+    app.innerHTML = h;
+  }
+
+  /* ---------- routing ---------- */
+  var app = document.getElementById('app');
+  function setNav(n){
+    document.querySelectorAll('#nav a').forEach(function(a){
+      if(a.getAttribute('data-n') === n) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+  }
+  function route(){
+    var id = (location.hash || '').replace('#', '');
+    var c = COMPANIES.filter(function(x){ return x.id === id; })[0];
+    charts = [];
+    if(c){ setNav('list'); renderDetail(c); }
+    else if(id === 'past'){ setNav('past'); renderPast(); }
+    else if(id === 'guide'){ setNav('guide'); renderGuide(); }
+    else if(id === 'schedule'){ setNav('schedule'); renderSchedule(); }
+    else if(id === 'funds'){ setNav('funds'); renderFunds(); }
+    else { setNav('list'); renderList(); }
+    annotate();
+    window.scrollTo(0, 0);
+  }
+  app.addEventListener('click', function(e){
+    var t = e.target.closest ? e.target : null;
+    if(!t) return;
+    var b = t.closest('[data-sort]');
+    if(b){ sortKey = b.getAttribute('data-sort'); renderList(); annotate(); return; }
+    var cb = t.closest('[data-cal]');
+    if(cb){
+      if(cb.disabled) return;
+      var yy = +CAL.month.slice(0, 4), mm = +CAL.month.slice(5, 7) + (cb.getAttribute('data-cal') === 'next' ? 1 : -1);
+      if(mm < 1){ mm = 12; yy--; } if(mm > 12){ mm = 1; yy++; }
+      CAL.month = yy + '-' + p2(mm); CAL.sel = null; renderSchedule(); annotate(); return;
+    }
+    var co = t.closest('[data-co]');
+    if(co){ CAL.co = co.getAttribute('data-co'); CAL.sel = null; CAL.month = null; renderSchedule(); annotate(); return; }
+    var dc = t.closest('[data-day]');
+    if(dc){ CAL.sel = dc.getAttribute('data-day'); renderSchedule(); annotate();
+      var sel = document.querySelector('.cal-sel'); if(sel && sel.scrollIntoView) sel.scrollIntoView({block:'nearest'});
+      return; }
+    var j = t.closest('[data-jump]');
+    if(j){
+      var el = document.getElementById(j.getAttribute('data-jump'));
+      if(el){
+        var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        el.scrollIntoView({behavior: calm ? 'auto' : 'smooth', block: 'start'});
+      }
+    }
+  });
+  window.addEventListener('hashchange', route);
+  route();
+}
+/* データは data.json から読み込みます(毎日の自動更新で書き換わるファイルです) */
+fetch('data.json?v=' + Date.now()).then(function(r){ if(!r.ok) throw new Error('http ' + r.status); return r.json(); })
+  .then(boot)
+  .catch(function(){
+    document.getElementById('app').innerHTML = '<section class="pg"><h1>データを読み込めませんでした</h1><p>data.json が同じフォルダにあるか、確認してください。ファイルを直接開くのではなく、VS Codeの「Live Server」などで開く必要があります。</p></section>';
+  });
+</script>
+
+</body>
+</html>
